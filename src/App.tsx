@@ -12,6 +12,7 @@ import SuperadminDashboard from "./pages/superadmin/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import VoterDashboard from "./pages/voter/Dashboard";
 import VoterProfile from "./pages/voter/Profile";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +26,7 @@ const App = () => (
           <Routes>
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Index />} />
             
             {/* Superadmin routes */}
             <Route 

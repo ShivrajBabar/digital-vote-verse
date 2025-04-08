@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // If no user, return null
@@ -84,10 +85,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     }
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-primary text-white shadow-md">
+      {/* Sticky Header */}
+      <header className="bg-primary text-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Mobile menu button */}
           <button
@@ -147,8 +153,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <button onClick={logout} className="w-full cursor-pointer flex items-center text-red-600">
+                <DropdownMenuItem>
+                  <button onClick={handleLogout} className="w-full cursor-pointer flex items-center text-red-600">
                     <LogOut className="mr-2" size={16} /> Log out
                   </button>
                 </DropdownMenuItem>
@@ -162,9 +168,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Sidebar for larger screens */}
         <aside
           className={`
-            bg-sidebar text-sidebar-foreground w-64 md:flex flex-col md:sticky top-0 h-full
+            bg-sidebar text-sidebar-foreground w-64 md:flex flex-col md:sticky top-16 h-full
             ${sidebarOpen ? 'fixed inset-y-0 left-0 z-40 block' : 'hidden'} 
-            md:block shadow-lg md:h-[calc(100vh-4rem)] md:sticky md:top-16
+            md:block shadow-lg md:h-[calc(100vh-4rem)]
           `}
         >
           {/* Close button for mobile */}
