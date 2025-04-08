@@ -1,9 +1,9 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { UserPlus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -15,35 +15,48 @@ const SuperadminCandidates = () => {
   const candidates = [
     { 
       id: 1, 
-      name: 'Rajesh Kumar', 
-      party: 'Democratic Party', 
-      constituency: 'Mumbai North', 
-      election: 'Lok Sabha Elections 2025',
-      status: 'Approved'
+      name: "Rajesh Kumar", 
+      party: "Democratic Party", 
+      age: 45, 
+      constituency: "Mumbai North",
+      election: "Lok Sabha Elections 2025",
+      status: "Approved"
     },
     { 
       id: 2, 
-      name: 'Priya Sharma', 
-      party: 'Progressive Alliance', 
-      constituency: 'Delhi East', 
-      election: 'Lok Sabha Elections 2025',
-      status: 'Pending'
+      name: "Sonia Singh", 
+      party: "Progressive Alliance", 
+      age: 42, 
+      constituency: "Delhi East",
+      election: "Lok Sabha Elections 2025",
+      status: "Pending"
     },
     { 
       id: 3, 
-      name: 'Ahmed Khan', 
-      party: 'National Front', 
-      constituency: 'Bangalore Central', 
-      election: 'Vidhan Sabha Elections 2024',
-      status: 'Approved'
+      name: "Amit Verma", 
+      party: "National Front", 
+      age: 52, 
+      constituency: "Bangalore Central",
+      election: "Vidhan Sabha Elections 2024",
+      status: "Approved"
     },
     { 
       id: 4, 
-      name: 'Sunita Patel', 
-      party: 'People\'s Party', 
-      constituency: 'Chennai South', 
-      election: 'Lok Sabha Elections 2025',
-      status: 'Rejected'
+      name: "Kavita Desai", 
+      party: "People's Party", 
+      age: 39, 
+      constituency: "Chennai South",
+      election: "Municipal Elections 2024",
+      status: "Rejected"
+    },
+    { 
+      id: 5, 
+      name: "Prakash Joshi", 
+      party: "Democratic Party", 
+      age: 47, 
+      constituency: "Mumbai South",
+      election: "Lok Sabha Elections 2025",
+      status: "Pending"
     }
   ];
 
@@ -64,8 +77,10 @@ const SuperadminCandidates = () => {
         {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Candidate Management</h1>
-          <Button as={Link} to="/superadmin/candidates/register">
-            <Plus className="h-4 w-4 mr-2" /> Register New Candidate
+          <Button asChild>
+            <Link to="/superadmin/candidates/register">
+              <UserPlus className="h-4 w-4 mr-2" /> Register Candidate
+            </Link>
           </Button>
         </div>
 
@@ -83,65 +98,57 @@ const SuperadminCandidates = () => {
             <option value="">All Elections</option>
             <option value="lok-sabha">Lok Sabha Elections</option>
             <option value="vidhan-sabha">Vidhan Sabha Elections</option>
+            <option value="municipal">Municipal Elections</option>
           </select>
           <select className="border rounded-md px-4 py-2">
-            <option value="">All States</option>
-            <option value="maharashtra">Maharashtra</option>
-            <option value="delhi">Delhi</option>
-            <option value="karnataka">Karnataka</option>
+            <option value="">All Status</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
 
         {/* Candidates Table */}
         <Card>
           <CardHeader>
-            <CardTitle>All Candidates</CardTitle>
-            <CardDescription>Manage election candidates across all constituencies</CardDescription>
+            <CardTitle>Election Candidates</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-3 text-left">ID</th>
-                    <th className="px-4 py-3 text-left">Name</th>
-                    <th className="px-4 py-3 text-left">Party</th>
-                    <th className="px-4 py-3 text-left">Constituency</th>
-                    <th className="px-4 py-3 text-left">Election</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Actions</th>
+              <table className="w-full text-sm text-left">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3">Name</th>
+                    <th className="px-6 py-3">Party</th>
+                    <th className="px-6 py-3">Age</th>
+                    <th className="px-6 py-3">Constituency</th>
+                    <th className="px-6 py-3">Election</th>
+                    <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {candidates.map((candidate) => (
-                    <tr key={candidate.id} className="border-b">
-                      <td className="px-4 py-3">{candidate.id}</td>
-                      <td className="px-4 py-3 font-medium">{candidate.name}</td>
-                      <td className="px-4 py-3">{candidate.party}</td>
-                      <td className="px-4 py-3">{candidate.constituency}</td>
-                      <td className="px-4 py-3">{candidate.election}</td>
-                      <td className="px-4 py-3">
+                    <tr key={candidate.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4 font-medium">{candidate.name}</td>
+                      <td className="px-6 py-4">{candidate.party}</td>
+                      <td className="px-6 py-4">{candidate.age}</td>
+                      <td className="px-6 py-4">{candidate.constituency}</td>
+                      <td className="px-6 py-4">{candidate.election}</td>
+                      <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                           ${candidate.status === 'Approved' ? 'bg-green-100 text-green-800' : 
-                          candidate.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'}`}>
+                          candidate.status === 'Rejected' ? 'bg-red-100 text-red-800' : 
+                          'bg-yellow-100 text-yellow-800'}`}>
                           {candidate.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleEditCandidate(candidate.id)}
-                          >
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditCandidate(candidate.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => handleDeleteCandidate(candidate.id)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteCandidate(candidate.id)}>
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </div>

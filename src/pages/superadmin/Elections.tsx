@@ -82,8 +82,10 @@ const SuperadminElections = () => {
         {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Election Management</h1>
-          <Button as={Link} to="/superadmin/elections/create">
-            <Plus className="h-4 w-4 mr-2" /> Create Election
+          <Button asChild>
+            <Link to="/superadmin/elections/create">
+              <Plus className="h-4 w-4 mr-2" /> Create Election
+            </Link>
           </Button>
         </div>
 

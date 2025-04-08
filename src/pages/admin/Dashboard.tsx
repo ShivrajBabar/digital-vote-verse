@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
 import { Users, Vote, Landmark, FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
