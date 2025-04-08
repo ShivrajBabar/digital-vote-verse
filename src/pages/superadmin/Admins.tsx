@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { Plus, Search, Edit, Trash2, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Link, useNavigate } from 'react-router-dom';
 
 const SuperadminAdmins = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Mock admins data
   const admins = [
@@ -53,18 +55,8 @@ const SuperadminAdmins = () => {
     }
   ];
 
-  const handleAddAdmin = () => {
-    toast({
-      title: "Feature in development",
-      description: "Admin registration form will be implemented soon.",
-    });
-  };
-
   const handleEditAdmin = (id: number) => {
-    toast({
-      title: "Edit Admin",
-      description: `Editing admin with ID: ${id}`,
-    });
+    navigate(`/superadmin/admins/edit/${id}`);
   };
 
   const handleDeleteAdmin = (id: number) => {
@@ -80,7 +72,7 @@ const SuperadminAdmins = () => {
         {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Admin Management</h1>
-          <Button onClick={handleAddAdmin}>
+          <Button as={Link} to="/superadmin/admins/register">
             <UserPlus className="h-4 w-4 mr-2" /> Add New Admin
           </Button>
         </div>

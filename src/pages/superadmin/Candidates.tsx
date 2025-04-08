@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { Plus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Link, useNavigate } from 'react-router-dom';
 
 const SuperadminCandidates = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Mock candidates data
   const candidates = [
@@ -45,18 +47,8 @@ const SuperadminCandidates = () => {
     }
   ];
 
-  const handleRegisterCandidate = () => {
-    toast({
-      title: "Feature in development",
-      description: "Candidate registration form will be implemented soon.",
-    });
-  };
-
   const handleEditCandidate = (id: number) => {
-    toast({
-      title: "Edit Candidate",
-      description: `Editing candidate with ID: ${id}`,
-    });
+    navigate(`/superadmin/candidates/edit/${id}`);
   };
 
   const handleDeleteCandidate = (id: number) => {
@@ -72,7 +64,7 @@ const SuperadminCandidates = () => {
         {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Candidate Management</h1>
-          <Button onClick={handleRegisterCandidate}>
+          <Button as={Link} to="/superadmin/candidates/register">
             <Plus className="h-4 w-4 mr-2" /> Register New Candidate
           </Button>
         </div>

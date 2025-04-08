@@ -22,6 +22,15 @@ import VoterProfile from "./pages/voter/Profile";
 import VoterElections from "./pages/voter/Elections";
 import Index from "./pages/Index";
 
+// Import the new form pages
+import RegisterCandidate from "./pages/superadmin/RegisterCandidate";
+import EditCandidate from "./pages/superadmin/EditCandidate";
+import RegisterAdmin from "./pages/superadmin/RegisterAdmin";
+import EditAdmin from "./pages/superadmin/EditAdmin";
+import CreateElection from "./pages/superadmin/CreateElection";
+import RegisterVoter from "./pages/admin/RegisterVoter";
+import EditVoter from "./pages/admin/EditVoter";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -54,6 +63,22 @@ const App = () => (
               } 
             />
             <Route 
+              path="/superadmin/candidates/register" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <RegisterCandidate />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/candidates/edit/:id" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <EditCandidate />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/superadmin/admins" 
               element={
                 <ProtectedRoute requiredRole="superadmin">
@@ -62,10 +87,34 @@ const App = () => (
               } 
             />
             <Route 
+              path="/superadmin/admins/register" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <RegisterAdmin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/admins/edit/:id" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <EditAdmin />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/superadmin/elections" 
               element={
                 <ProtectedRoute requiredRole="superadmin">
                   <SuperadminElections />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/elections/create" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <CreateElection />
                 </ProtectedRoute>
               } 
             />
@@ -92,6 +141,22 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminVoters />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/voters/register" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <RegisterVoter />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/voters/edit/:id" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <EditVoter />
                 </ProtectedRoute>
               } 
             />

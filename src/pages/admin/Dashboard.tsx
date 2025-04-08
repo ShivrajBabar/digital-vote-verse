@@ -113,7 +113,7 @@ const AdminDashboard = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
-                <Link to="/admin/voters">
+                <Link to="/admin/voters/register">
                   <Users className="h-6 w-6 mb-2" />
                   <span>Register New Voter</span>
                 </Link>

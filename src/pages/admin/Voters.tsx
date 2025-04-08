@@ -6,10 +6,12 @@ import Layout from '@/components/Layout';
 import { Plus, Search, Edit, Trash2, UserPlus, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { Link, useNavigate } from 'react-router-dom';
 
 const AdminVoters = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Mock voters data
   const voters = [
@@ -51,18 +53,8 @@ const AdminVoters = () => {
     }
   ];
 
-  const handleRegisterVoter = () => {
-    toast({
-      title: "Feature in development",
-      description: "Voter registration form will be implemented soon.",
-    });
-  };
-
   const handleEditVoter = (id: number) => {
-    toast({
-      title: "Edit Voter",
-      description: `Editing voter with ID: ${id}`,
-    });
+    navigate(`/admin/voters/edit/${id}`);
   };
 
   const handleDeleteVoter = (id: number) => {
@@ -89,7 +81,7 @@ const AdminVoters = () => {
             <p className="text-gray-500">Managing voters for {user?.constituency || 'your constituency'}</p>
           </div>
           <div className="flex space-x-3">
-            <Button onClick={handleRegisterVoter}>
+            <Button as={Link} to="/admin/voters/register">
               <UserPlus className="h-4 w-4 mr-2" /> Register New Voter
             </Button>
             <Button variant="outline" onClick={handleDownloadVoterList}>

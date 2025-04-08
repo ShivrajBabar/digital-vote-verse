@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { Plus, Search, Edit, Trash2, Calendar, Eye } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { Link, useNavigate } from 'react-router-dom';
 
 const SuperadminElections = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Mock elections data
   const elections = [
@@ -53,13 +55,6 @@ const SuperadminElections = () => {
     }
   ];
 
-  const handleCreateElection = () => {
-    toast({
-      title: "Feature in development",
-      description: "Election creation form will be implemented soon.",
-    });
-  };
-
   const handleEditElection = (id: number) => {
     toast({
       title: "Edit Election",
@@ -87,7 +82,7 @@ const SuperadminElections = () => {
         {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Election Management</h1>
-          <Button onClick={handleCreateElection}>
+          <Button as={Link} to="/superadmin/elections/create">
             <Plus className="h-4 w-4 mr-2" /> Create Election
           </Button>
         </div>
