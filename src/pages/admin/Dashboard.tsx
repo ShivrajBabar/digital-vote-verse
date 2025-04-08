@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
 import { Users, Vote, Landmark, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -111,13 +112,17 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center">
-                <Users className="h-6 w-6 mb-2" />
-                <span>Register New Voter</span>
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+                <Link to="/admin/voters">
+                  <Users className="h-6 w-6 mb-2" />
+                  <span>Register New Voter</span>
+                </Link>
               </Button>
-              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center">
-                <FileText className="h-6 w-6 mb-2" />
-                <span>View Voter List</span>
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+                <Link to="/admin/voters">
+                  <FileText className="h-6 w-6 mb-2" />
+                  <span>View Voter List</span>
+                </Link>
               </Button>
             </div>
           </CardContent>

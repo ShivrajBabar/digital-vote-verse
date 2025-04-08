@@ -9,9 +9,17 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SuperadminDashboard from "./pages/superadmin/Dashboard";
+import SuperadminCandidates from "./pages/superadmin/Candidates";
+import SuperadminAdmins from "./pages/superadmin/Admins";
+import SuperadminElections from "./pages/superadmin/Elections";
+import SuperadminProfile from "./pages/superadmin/Profile";
 import AdminDashboard from "./pages/admin/Dashboard";
+import AdminVoters from "./pages/admin/Voters";
+import AdminCandidates from "./pages/admin/Candidates";
+import AdminProfile from "./pages/admin/Profile";
 import VoterDashboard from "./pages/voter/Dashboard";
 import VoterProfile from "./pages/voter/Profile";
+import VoterElections from "./pages/voter/Elections";
 import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
@@ -37,6 +45,38 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/superadmin/candidates" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <SuperadminCandidates />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/admins" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <SuperadminAdmins />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/elections" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <SuperadminElections />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/profile" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <SuperadminProfile />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Admin routes */}
             <Route 
@@ -44,6 +84,30 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/voters" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminVoters />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/candidates" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminCandidates />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/profile" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminProfile />
                 </ProtectedRoute>
               } 
             />
@@ -62,6 +126,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="voter">
                   <VoterProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/voter/elections" 
+              element={
+                <ProtectedRoute requiredRole="voter">
+                  <VoterElections />
                 </ProtectedRoute>
               } 
             />

@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
 import { Users, Vote, Landmark, BarChart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const SuperadminDashboard = () => {
   const { user } = useAuth();
@@ -103,17 +105,23 @@ const SuperadminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center">
-                <Vote className="h-6 w-6 mb-2" />
-                <span>Register New Candidate</span>
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+                <Link to="/superadmin/candidates">
+                  <Vote className="h-6 w-6 mb-2" />
+                  <span>Register New Candidate</span>
+                </Link>
               </Button>
-              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center">
-                <Users className="h-6 w-6 mb-2" />
-                <span>Add New Admin</span>
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+                <Link to="/superadmin/admins">
+                  <Users className="h-6 w-6 mb-2" />
+                  <span>Add New Admin</span>
+                </Link>
               </Button>
-              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center">
-                <Landmark className="h-6 w-6 mb-2" />
-                <span>Create Election</span>
+              <Button variant="outline" className="h-auto py-4 flex flex-col items-center justify-center" asChild>
+                <Link to="/superadmin/elections">
+                  <Landmark className="h-6 w-6 mb-2" />
+                  <span>Create Election</span>
+                </Link>
               </Button>
             </div>
           </CardContent>
@@ -124,6 +132,3 @@ const SuperadminDashboard = () => {
 };
 
 export default SuperadminDashboard;
-
-// We need to import Button for the Quick Access section
-import { Button } from '@/components/ui/button';

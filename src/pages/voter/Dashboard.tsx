@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
 import { Vote, Calendar, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const VoterDashboard = () => {
   const { user } = useAuth();
@@ -89,9 +90,11 @@ const VoterDashboard = () => {
                   </CardContent>
                   <CardFooter>
                     {election.eligibleToVote ? (
-                      <Button className="w-full">
-                        <Vote className="mr-2 h-4 w-4" />
-                        Cast Your Vote
+                      <Button className="w-full" asChild>
+                        <Link to="/voter/elections">
+                          <Vote className="mr-2 h-4 w-4" />
+                          Cast Your Vote
+                        </Link>
                       </Button>
                     ) : (
                       <p className="text-sm text-gray-500">You are not eligible to vote in this election.</p>

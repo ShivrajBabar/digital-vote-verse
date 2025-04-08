@@ -51,12 +51,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           { name: 'Candidates', path: '/superadmin/candidates', icon: <Vote className="mr-2" size={18} /> },
           { name: 'Admins', path: '/superadmin/admins', icon: <Users className="mr-2" size={18} /> },
           { name: 'Elections', path: '/superadmin/elections', icon: <Settings className="mr-2" size={18} /> },
+          { name: 'My Profile', path: '/superadmin/profile', icon: <User className="mr-2" size={18} /> },
         ];
       case 'admin':
         return [
           { name: 'Dashboard', path: '/admin/dashboard', icon: <Home className="mr-2" size={18} /> },
           { name: 'Voters', path: '/admin/voters', icon: <Users className="mr-2" size={18} /> },
           { name: 'Candidates', path: '/admin/candidates', icon: <Vote className="mr-2" size={18} /> },
+          { name: 'My Profile', path: '/admin/profile', icon: <User className="mr-2" size={18} /> },
         ];
       case 'voter':
         return [
@@ -88,6 +90,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  // Get profile path based on user role
+  const getProfilePath = () => {
+    switch (user.role) {
+      case 'superadmin':
+        return '/superadmin/profile';
+      case 'admin':
+        return '/admin/profile';
+      case 'voter':
+        return '/voter/profile';
+      default:
+        return '/';
+    }
   };
 
   return (
@@ -148,7 +164,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to={`/${user.role}/profile`} className="cursor-pointer flex items-center">
+                  <Link to={getProfilePath()} className="cursor-pointer flex items-center">
                     <User className="mr-2" size={16} /> Profile
                   </Link>
                 </DropdownMenuItem>
