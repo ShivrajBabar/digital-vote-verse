@@ -56,9 +56,10 @@ const SuperadminElections = () => {
   ];
 
   const handleEditElection = (id: number) => {
+    navigate(`/superadmin/elections/edit/${id}`);
     toast({
       title: "Edit Election",
-      description: `Editing election with ID: ${id}`,
+      description: `Navigating to edit election with ID: ${id}`,
     });
   };
 
@@ -100,13 +101,13 @@ const SuperadminElections = () => {
             />
           </div>
           <select className="border rounded-md px-4 py-2">
-            <option value="">All Types</option>
+            <option value="all">All Types</option>
             <option value="lok-sabha">Lok Sabha</option>
             <option value="vidhan-sabha">Vidhan Sabha</option>
             <option value="local-body">Local Body</option>
           </select>
           <select className="border rounded-md px-4 py-2">
-            <option value="">All Statuses</option>
+            <option value="all">All Statuses</option>
             <option value="scheduled">Scheduled</option>
             <option value="active">Active</option>
             <option value="completed">Completed</option>

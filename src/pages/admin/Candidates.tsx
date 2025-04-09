@@ -1,15 +1,33 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { Search, Eye, Download } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
+} from "@/components/ui/dialog";
+
+type Candidate = {
+  id: number;
+  name: string;
+  party: string;
+  symbol: string;
+  election: string;
+  status: string;
+};
 
 const AdminCandidates = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [viewCandidate, setViewCandidate] = useState<Candidate | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   // Mock candidates data for admin's constituency
   const candidates = [
@@ -47,10 +65,12 @@ const AdminCandidates = () => {
     }
   ];
 
-  const handleViewCandidate = (id: number) => {
+  const handleViewCandidate = (candidate: Candidate) => {
+    setViewCandidate(candidate);
+    setDialogOpen(true);
     toast({
       title: "View Candidate",
-      description: `Viewing candidate with ID: ${id}`,
+      description: `Viewing candidate: ${candidate.name}`,
     });
   };
 
@@ -136,7 +156,7 @@ const AdminCandidates = () => {
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          onClick={() => handleViewCandidate(candidate.id)}
+                          onClick={() => handleViewCandidate(candidate)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -149,6 +169,60 @@ const AdminCandidates = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Candidate Details Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Candidate Details</DialogTitle>
+            <DialogDescription>
+              Information about the selected candidate
+            </DialogDescription>
+          </DialogHeader>
+          {viewCandidate && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Name</p>
+                  <p className="text-sm">{viewCandidate.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">ID</p>
+                  <p className="text-sm">{viewCandidate.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Party</p>
+                  <p className="text-sm">{viewCandidate.party}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Symbol</p>
+                  <p className="text-sm">{viewCandidate.symbol}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Election</p>
+                  <p className="text-sm">{viewCandidate.election}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Status</p>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                    ${viewCandidate.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    {viewCandidate.status}
+                  </span>
+                </div>
+              </div>
+              <div className="pt-4">
+                <Button 
+                  variant="secondary" 
+                  onClick={() => setDialogOpen(false)}
+                  className="w-full"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

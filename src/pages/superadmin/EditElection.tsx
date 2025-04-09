@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Form, 
   FormControl, 
@@ -46,7 +47,9 @@ const formSchema = z.object({
   ward: z.string().optional(),
 });
 
-const CreateElection = () => {
+const EditElection = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   // State for dependent dropdowns
@@ -66,12 +69,31 @@ const CreateElection = () => {
   const electionTypes = ["Lok Sabha", "Vidhan Sabha", "Local Body", "Panchayat"];
   const electionStatuses = ["Preparation", "Scheduled", "Active", "Completed"];
 
+  // Mock election data based on ID - in a real app, this would be fetched from an API
+  const mockElection = {
+    id: Number(id),
+    name: `Election ${id}`,
+    type: "Lok Sabha",
+    status: "Scheduled",
+    date: "2025-04-15",
+    applicationStartDate: "2024-10-01",
+    applicationEndDate: "2024-12-31",
+    resultDate: "2025-04-20",
+    description: "This is a sample election for demonstration purposes.",
+    state: "Maharashtra",
+    district: "Mumbai",
+    loksabha: "Mumbai North",
+    vidhansabha: "Borivali",
+    localBody: "Borivali Municipal Corp",
+    ward: ""
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       type: "",
-      status: "Preparation",
+      status: "",
       date: "",
       applicationStartDate: "",
       applicationEndDate: "",
@@ -82,32 +104,62 @@ const CreateElection = () => {
       loksabha: "",
       vidhansabha: "",
       localBody: "",
-      ward: "",
+      ward: ""
     },
   });
+
+  // Load election data
+  useEffect(() => {
+    // In a real app, fetch data from API
+    if (mockElection) {
+      form.reset({
+        name: mockElection.name,
+        type: mockElection.type,
+        status: mockElection.status,
+        date: mockElection.date,
+        applicationStartDate: mockElection.applicationStartDate,
+        applicationEndDate: mockElection.applicationEndDate,
+        resultDate: mockElection.resultDate,
+        description: mockElection.description,
+        state: mockElection.state,
+        district: mockElection.district,
+        loksabha: mockElection.loksabha,
+        vidhansabha: mockElection.vidhansabha,
+        localBody: mockElection.localBody,
+        ward: mockElection.ward
+      });
+      
+      // Set the state variables for the cascading dropdowns
+      setSelectedState(mockElection.state);
+      setSelectedDistrict(mockElection.district);
+      setSelectedLoksabha(mockElection.loksabha);
+      setSelectedVidhansabha(mockElection.vidhansabha);
+      setSelectedLocalBody(mockElection.localBody);
+    }
+  }, [id, form]);
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // In a real application, this would send data to a backend API
     console.log(values);
     toast({
-      title: "Election Created",
-      description: `${values.name} has been created successfully.`,
+      title: "Election Updated",
+      description: `${values.name} has been updated successfully.`,
     });
-    form.reset();
+    navigate("/superadmin/elections");
   }
 
   return (
     <Layout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Create Election</h1>
-          <p className="text-gray-500">Set up a new election</p>
+          <h1 className="text-2xl font-bold">Edit Election</h1>
+          <p className="text-gray-500">Update election details</p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Election Information</CardTitle>
-            <CardDescription>Enter the details for the new election</CardDescription>
+            <CardDescription>Modify the details for this election</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -431,8 +483,11 @@ const CreateElection = () => {
                   )}
                 />
 
-                <div className="flex justify-end">
-                  <Button type="submit">Create Election</Button>
+                <div className="flex justify-end space-x-4">
+                  <Button type="button" variant="outline" onClick={() => navigate('/superadmin/elections')}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Save Changes</Button>
                 </div>
               </form>
             </Form>
@@ -443,4 +498,4 @@ const CreateElection = () => {
   );
 };
 
-export default CreateElection;
+export default EditElection;

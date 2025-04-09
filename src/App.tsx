@@ -28,6 +28,7 @@ import EditCandidate from "./pages/superadmin/EditCandidate";
 import RegisterAdmin from "./pages/superadmin/RegisterAdmin";
 import EditAdmin from "./pages/superadmin/EditAdmin";
 import CreateElection from "./pages/superadmin/CreateElection";
+import EditElection from "./pages/superadmin/EditElection";
 import RegisterVoter from "./pages/admin/RegisterVoter";
 import EditVoter from "./pages/admin/EditVoter";
 
@@ -115,6 +116,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="superadmin">
                   <CreateElection />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/elections/edit/:id" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <EditElection />
                 </ProtectedRoute>
               } 
             />
