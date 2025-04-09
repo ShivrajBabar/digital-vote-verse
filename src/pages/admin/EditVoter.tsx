@@ -20,6 +20,14 @@ import {
 } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { 
+  allLoksabhas, 
+  allVidhansabhas, 
+  allLocalBodies, 
+  allWards, 
+  allBooths, 
+  getOptionsForDropdown 
+} from '@/utils/locationData';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -57,47 +65,6 @@ const EditVoter = () => {
   const [wards, setWards] = useState<string[]>([]);
   const [booths, setBooths] = useState<string[]>([]);
 
-  // Mock data for dropdowns
-  const allLoksabhas = {
-    "Mumbai": ["Mumbai North", "Mumbai South", "Mumbai North East"],
-    "Delhi": ["East Delhi", "New Delhi", "North Delhi"],
-    "Bangalore": ["Bangalore Central", "Bangalore North", "Bangalore South"],
-    "Chennai": ["Chennai Central", "Chennai North", "Chennai South"]
-  };
-  
-  const allVidhansabhas = {
-    "Mumbai North": ["Borivali", "Dahisar", "Kandivali East"],
-    "Mumbai South": ["Worli", "Byculla", "Malabar Hill"],
-    "East Delhi": ["Preet Vihar", "Vishwas Nagar", "Laxmi Nagar"],
-    "Bangalore Central": ["Shivajinagar", "Shantinagar", "Gandhinagar"],
-    "Chennai Central": ["Thousand Lights", "Harbour", "Chepauk-Triplicane"]
-  };
-  
-  const allLocalBodies = {
-    "Borivali": ["Borivali Municipal Corp", "Borivali Gram Panchayat"],
-    "Dahisar": ["Dahisar Municipal Corp", "Dahisar Gram Panchayat"],
-    "Worli": ["Worli Municipal Corp"],
-    "Preet Vihar": ["Preet Vihar Municipal Corp"],
-    "Shivajinagar": ["Shivajinagar Municipal Corp"],
-    "Thousand Lights": ["Chennai Municipal Corp Zone 5"]
-  };
-  
-  const allWards = {
-    "Borivali Municipal Corp": ["Ward 1", "Ward 2", "Ward 3"],
-    "Worli Municipal Corp": ["Ward A", "Ward B", "Ward C"],
-    "Preet Vihar Municipal Corp": ["Ward 10", "Ward 11", "Ward 12"],
-    "Shivajinagar Municipal Corp": ["Ward X", "Ward Y", "Ward Z"],
-    "Chennai Municipal Corp Zone 5": ["Ward 101", "Ward 102", "Ward 103"]
-  };
-  
-  const allBooths = {
-    "Ward 1": ["Booth #101", "Booth #102", "Booth #103"],
-    "Ward A": ["Booth #201", "Booth #202", "Booth #203"],
-    "Ward 10": ["Booth #301", "Booth #302", "Booth #303"],
-    "Ward X": ["Booth #401", "Booth #402", "Booth #403"],
-    "Ward 101": ["Booth #501", "Booth #502", "Booth #503"]
-  };
-
   // Mock voter data (would come from API)
   const voterData = {
     id: parseInt(id || "1"),
@@ -122,22 +89,36 @@ const EditVoter = () => {
 
   // Set up initial dropdown values based on voter data
   useEffect(() => {
+    // Initialize Lok Sabha constituencies
     if (voterData.district) {
-      setLoksabhas(allLoksabhas[voterData.district as keyof typeof allLoksabhas] || []);
+      const newLoksabhas = getOptionsForDropdown(allLoksabhas, voterData.district);
+      setLoksabhas(newLoksabhas);
     }
+
+    // Initialize Vidhan Sabha constituencies
     if (voterData.loksabhaWard) {
-      setVidhansabhas(allVidhansabhas[voterData.loksabhaWard as keyof typeof allVidhansabhas] || []);
+      const newVidhansabhas = getOptionsForDropdown(allVidhansabhas, voterData.loksabhaWard);
+      setVidhansabhas(newVidhansabhas);
     }
+
+    // Initialize Local Bodies
     if (voterData.vidhansabhaWard) {
-      setLocalbodies(allLocalBodies[voterData.vidhansabhaWard as keyof typeof allLocalBodies] || []);
+      const newLocalbodies = getOptionsForDropdown(allLocalBodies, voterData.vidhansabhaWard);
+      setLocalbodies(newLocalbodies);
     }
+
+    // Initialize Wards
     if (voterData.localbody) {
-      setWards(allWards[voterData.localbody as keyof typeof allWards] || []);
+      const newWards = getOptionsForDropdown(allWards, voterData.localbody);
+      setWards(newWards);
     }
+
+    // Initialize Booths
     if (voterData.ward) {
-      setBooths(allBooths[voterData.ward as keyof typeof allBooths] || []);
+      const newBooths = getOptionsForDropdown(allBooths, voterData.ward);
+      setBooths(newBooths);
     }
-  }, []);
+  }, [voterData]);
 
   // Handle loksabha change to update vidhansabha dropdown
   const handleLoksabhaChange = (loksabha: string) => {
@@ -146,7 +127,9 @@ const EditVoter = () => {
     form.setValue("localbody", "");
     form.setValue("ward", "");
     form.setValue("booth", "");
-    setVidhansabhas(allVidhansabhas[loksabha as keyof typeof allVidhansabhas] || []);
+    
+    const newVidhansabhas = getOptionsForDropdown(allVidhansabhas, loksabha);
+    setVidhansabhas(newVidhansabhas);
     setLocalbodies([]);
     setWards([]);
     setBooths([]);
@@ -158,7 +141,9 @@ const EditVoter = () => {
     form.setValue("localbody", "");
     form.setValue("ward", "");
     form.setValue("booth", "");
-    setLocalbodies(allLocalBodies[vidhansabha as keyof typeof allLocalBodies] || []);
+    
+    const newLocalbodies = getOptionsForDropdown(allLocalBodies, vidhansabha);
+    setLocalbodies(newLocalbodies);
     setWards([]);
     setBooths([]);
   };
@@ -168,7 +153,9 @@ const EditVoter = () => {
     form.setValue("localbody", localbody);
     form.setValue("ward", "");
     form.setValue("booth", "");
-    setWards(allWards[localbody as keyof typeof allWards] || []);
+    
+    const newWards = getOptionsForDropdown(allWards, localbody);
+    setWards(newWards);
     setBooths([]);
   };
 
@@ -176,7 +163,9 @@ const EditVoter = () => {
   const handleWardChange = (ward: string) => {
     form.setValue("ward", ward);
     form.setValue("booth", "");
-    setBooths(allBooths[ward as keyof typeof allBooths] || []);
+    
+    const newBooths = getOptionsForDropdown(allBooths, ward);
+    setBooths(newBooths);
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {

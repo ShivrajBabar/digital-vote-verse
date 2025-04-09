@@ -19,9 +19,7 @@ import {
   User, 
   Users, 
   Vote, 
-  ChevronDown, 
-  Settings, 
-  Search 
+  Settings 
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -108,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Sticky Header */}
+      {/* Sticky Header - Updated layout */}
       <header className="bg-primary text-white shadow-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Mobile menu button */}
@@ -119,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <Menu size={24} />
           </button>
 
-          {/* Logo */}
+          {/* Logo and Name - Moved to left side */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <Vote className="h-8 w-8 text-white mr-2" />
@@ -127,23 +125,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           </div>
 
-          {/* Search bar - only for superadmin and admin */}
-          {user.role !== 'voter' && (
-            <div className="hidden md:block flex-1 max-w-md mx-4">
-              <div className="relative text-gray-300 focus-within:text-gray-600">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search size={18} />
-                </div>
-                <input
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-2 rounded-md text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder={`Search ${user.role === 'superadmin' ? 'admins, voters, candidates...' : 'voters, candidates...'}`}
-                />
-              </div>
-            </div>
-          )}
+          {/* Empty div to push profile to the right */}
+          <div className="flex-1"></div>
 
-          {/* User dropdown */}
+          {/* User dropdown - Moved to right side */}
           <div className="flex items-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

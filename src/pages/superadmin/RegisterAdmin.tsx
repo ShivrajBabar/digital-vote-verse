@@ -17,6 +17,7 @@ import {
   FormMessage 
 } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { states, allDistricts, allVidhansabhas, getOptionsForDropdown } from '@/utils/locationData';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -48,22 +49,6 @@ const RegisterAdmin = () => {
   const [districts, setDistricts] = useState<string[]>([]);
   const [vidhansabhas, setVidhansabhas] = useState<string[]>([]);
 
-  // Mock data for dropdowns
-  const states = ["Maharashtra", "Delhi", "Karnataka", "Tamil Nadu"];
-  const allDistricts = {
-    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane"],
-    "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi"],
-    "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore"],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Salem"]
-  };
-  
-  const allVidhansabhas = {
-    "Mumbai": ["Borivali", "Dahisar", "Kandivali East", "Worli", "Byculla", "Malabar Hill"],
-    "Pune": ["Kothrud", "Shivajinagar", "Hadapsar"],
-    "Delhi": ["Preet Vihar", "Vishwas Nagar", "Laxmi Nagar"],
-    "Bangalore": ["Shivajinagar", "Shantinagar", "Gandhinagar"]
-  };
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,7 +69,9 @@ const RegisterAdmin = () => {
     form.setValue("state", state);
     form.setValue("district", "");
     form.setValue("vidhansabha", "");
-    setDistricts(allDistricts[state as keyof typeof allDistricts] || []);
+    
+    const newDistricts = getOptionsForDropdown(allDistricts, state);
+    setDistricts(newDistricts);
     setVidhansabhas([]);
   };
 
@@ -92,7 +79,18 @@ const RegisterAdmin = () => {
   const handleDistrictChange = (district: string) => {
     form.setValue("district", district);
     form.setValue("vidhansabha", "");
-    setVidhansabhas(allVidhansabhas[district as keyof typeof allVidhansabhas] || []);
+    
+    // For districts, we need to get Lok Sabha constituencies first, then gather all Vidhan Sabha from them
+    const loksabhas = getOptionsForDropdown(allDistricts, district);
+    let allAvailableVidhansabhas: string[] = [];
+    
+    // Collect all Vidhan Sabha constituencies from all Lok Sabha constituencies in this district
+    loksabhas.forEach(loksabha => {
+      const vidhansabhasForLoksabha = getOptionsForDropdown(allVidhansabhas, loksabha);
+      allAvailableVidhansabhas = [...allAvailableVidhansabhas, ...vidhansabhasForLoksabha];
+    });
+    
+    setVidhansabhas(Array.from(new Set(allAvailableVidhansabhas)));
   };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
