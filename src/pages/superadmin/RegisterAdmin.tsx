@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -31,7 +31,7 @@ const formSchema = z.object({
   dob: z.string(),
   state: z.string(),
   district: z.string(),
-  constituency: z.string(),
+  vidhansabha: z.string(),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters.",
   }),
@@ -43,11 +43,26 @@ const formSchema = z.object({
 
 const RegisterAdmin = () => {
   const { toast } = useToast();
+  
+  // States for dependent dropdowns
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [vidhansabhas, setVidhansabhas] = useState<string[]>([]);
 
   // Mock data for dropdowns
   const states = ["Maharashtra", "Delhi", "Karnataka", "Tamil Nadu"];
-  const districts = ["Mumbai", "Delhi", "Bangalore", "Chennai"];
-  const constituencies = ["Mumbai North", "Delhi East", "Bangalore Central", "Chennai South"];
+  const allDistricts = {
+    "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Thane"],
+    "Delhi": ["Central Delhi", "East Delhi", "New Delhi", "North Delhi"],
+    "Karnataka": ["Bangalore", "Mysore", "Hubli", "Mangalore"],
+    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Salem"]
+  };
+  
+  const allVidhansabhas = {
+    "Mumbai": ["Borivali", "Dahisar", "Kandivali East", "Worli", "Byculla", "Malabar Hill"],
+    "Pune": ["Kothrud", "Shivajinagar", "Hadapsar"],
+    "Delhi": ["Preet Vihar", "Vishwas Nagar", "Laxmi Nagar"],
+    "Bangalore": ["Shivajinagar", "Shantinagar", "Gandhinagar"]
+  };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,18 +73,34 @@ const RegisterAdmin = () => {
       dob: "",
       state: "",
       district: "",
-      constituency: "",
+      vidhansabha: "",
       password: "",
       confirmPassword: "",
     },
   });
+
+  // Handle state change to update districts dropdown
+  const handleStateChange = (state: string) => {
+    form.setValue("state", state);
+    form.setValue("district", "");
+    form.setValue("vidhansabha", "");
+    setDistricts(allDistricts[state as keyof typeof allDistricts] || []);
+    setVidhansabhas([]);
+  };
+
+  // Handle district change to update vidhansabha dropdown
+  const handleDistrictChange = (district: string) => {
+    form.setValue("district", district);
+    form.setValue("vidhansabha", "");
+    setVidhansabhas(allVidhansabhas[district as keyof typeof allVidhansabhas] || []);
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // In a real application, this would send data to a backend API
     console.log(values);
     toast({
       title: "Admin Registered",
-      description: `${values.name} has been registered successfully as an Admin for ${values.constituency} constituency.`,
+      description: `${values.name} has been registered successfully as an Admin for ${values.vidhansabha} constituency.`,
     });
     form.reset();
   }
@@ -153,7 +184,10 @@ const RegisterAdmin = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>State*</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={(value) => handleStateChange(value)} 
+                          defaultValue={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select state" />
@@ -176,7 +210,11 @@ const RegisterAdmin = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>District*</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={(value) => handleDistrictChange(value)} 
+                          defaultValue={field.value}
+                          disabled={districts.length === 0}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select district" />
@@ -195,18 +233,22 @@ const RegisterAdmin = () => {
 
                   <FormField
                     control={form.control}
-                    name="constituency"
+                    name="vidhansabha"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Constituency*</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormLabel>Vidhan Sabha Constituency*</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          disabled={vidhansabhas.length === 0}
+                        >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select constituency" />
+                              <SelectValue placeholder="Select Vidhan Sabha constituency" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {constituencies.map((constituency) => (
+                            {vidhansabhas.map((constituency) => (
                               <SelectItem key={constituency} value={constituency}>{constituency}</SelectItem>
                             ))}
                           </SelectContent>

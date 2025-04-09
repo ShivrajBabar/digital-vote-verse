@@ -1,18 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { UserPlus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const SuperadminCandidates = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const [electionFilter, setElectionFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Mock candidates data
-  const candidates = [
+  const allCandidates = [
     { 
       id: 1, 
       name: "Rajesh Kumar", 
@@ -60,6 +65,22 @@ const SuperadminCandidates = () => {
     }
   ];
 
+  // Filter candidates based on search query and filters
+  const filteredCandidates = allCandidates.filter(candidate => {
+    const matchesSearch = searchQuery === '' || 
+      candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      candidate.party.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      candidate.constituency.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesElection = electionFilter === '' || candidate.election === electionFilter;
+    const matchesStatus = statusFilter === '' || candidate.status === statusFilter;
+    
+    return matchesSearch && matchesElection && matchesStatus;
+  });
+
+  // Get unique elections for filter dropdown
+  const elections = [...new Set(allCandidates.map(candidate => candidate.election))];
+
   const handleEditCandidate = (id: number) => {
     navigate(`/superadmin/candidates/edit/${id}`);
   };
@@ -92,20 +113,38 @@ const SuperadminCandidates = () => {
               type="text"
               placeholder="Search candidates..."
               className="pl-10 pr-4 py-2 border rounded-md w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <select className="border rounded-md px-4 py-2">
-            <option value="">All Elections</option>
-            <option value="lok-sabha">Lok Sabha Elections</option>
-            <option value="vidhan-sabha">Vidhan Sabha Elections</option>
-            <option value="municipal">Municipal Elections</option>
-          </select>
-          <select className="border rounded-md px-4 py-2">
-            <option value="">All Status</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </select>
+          
+          <div className="w-full sm:w-64">
+            <Select value={electionFilter} onValueChange={setElectionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Elections" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Elections</SelectItem>
+                {elections.map((election) => (
+                  <SelectItem key={election} value={election}>{election}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-full sm:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="Approved">Approved</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Candidates Table */}
@@ -128,7 +167,7 @@ const SuperadminCandidates = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {candidates.map((candidate) => (
+                  {filteredCandidates.map((candidate) => (
                     <tr key={candidate.id} className="border-b hover:bg-gray-50">
                       <td className="px-6 py-4 font-medium">{candidate.name}</td>
                       <td className="px-6 py-4">{candidate.party}</td>
@@ -157,6 +196,12 @@ const SuperadminCandidates = () => {
                   ))}
                 </tbody>
               </table>
+              
+              {filteredCandidates.length === 0 && (
+                <div className="py-8 text-center text-gray-500">
+                  No candidates match your search criteria
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

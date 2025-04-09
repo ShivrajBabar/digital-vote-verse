@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -37,6 +37,10 @@ const formSchema = z.object({
   dob: z.string(),
   state: z.string(),
   district: z.string(),
+  loksabhaWard: z.string(),
+  vidhansabhaWard: z.string(),
+  localbody: z.string(),
+  ward: z.string(),
   booth: z.string(),
 });
 
@@ -46,8 +50,53 @@ const EditVoter = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Mock data for booths
-  const booths = ["Booth #123, Municipal School", "Booth #145, Community Hall", "Booth #127, Public School"];
+  // States for dependent dropdowns
+  const [loksabhas, setLoksabhas] = useState<string[]>([]);
+  const [vidhansabhas, setVidhansabhas] = useState<string[]>([]);
+  const [localbodies, setLocalbodies] = useState<string[]>([]);
+  const [wards, setWards] = useState<string[]>([]);
+  const [booths, setBooths] = useState<string[]>([]);
+
+  // Mock data for dropdowns
+  const allLoksabhas = {
+    "Mumbai": ["Mumbai North", "Mumbai South", "Mumbai North East"],
+    "Delhi": ["East Delhi", "New Delhi", "North Delhi"],
+    "Bangalore": ["Bangalore Central", "Bangalore North", "Bangalore South"],
+    "Chennai": ["Chennai Central", "Chennai North", "Chennai South"]
+  };
+  
+  const allVidhansabhas = {
+    "Mumbai North": ["Borivali", "Dahisar", "Kandivali East"],
+    "Mumbai South": ["Worli", "Byculla", "Malabar Hill"],
+    "East Delhi": ["Preet Vihar", "Vishwas Nagar", "Laxmi Nagar"],
+    "Bangalore Central": ["Shivajinagar", "Shantinagar", "Gandhinagar"],
+    "Chennai Central": ["Thousand Lights", "Harbour", "Chepauk-Triplicane"]
+  };
+  
+  const allLocalBodies = {
+    "Borivali": ["Borivali Municipal Corp", "Borivali Gram Panchayat"],
+    "Dahisar": ["Dahisar Municipal Corp", "Dahisar Gram Panchayat"],
+    "Worli": ["Worli Municipal Corp"],
+    "Preet Vihar": ["Preet Vihar Municipal Corp"],
+    "Shivajinagar": ["Shivajinagar Municipal Corp"],
+    "Thousand Lights": ["Chennai Municipal Corp Zone 5"]
+  };
+  
+  const allWards = {
+    "Borivali Municipal Corp": ["Ward 1", "Ward 2", "Ward 3"],
+    "Worli Municipal Corp": ["Ward A", "Ward B", "Ward C"],
+    "Preet Vihar Municipal Corp": ["Ward 10", "Ward 11", "Ward 12"],
+    "Shivajinagar Municipal Corp": ["Ward X", "Ward Y", "Ward Z"],
+    "Chennai Municipal Corp Zone 5": ["Ward 101", "Ward 102", "Ward 103"]
+  };
+  
+  const allBooths = {
+    "Ward 1": ["Booth #101", "Booth #102", "Booth #103"],
+    "Ward A": ["Booth #201", "Booth #202", "Booth #203"],
+    "Ward 10": ["Booth #301", "Booth #302", "Booth #303"],
+    "Ward X": ["Booth #401", "Booth #402", "Booth #403"],
+    "Ward 101": ["Booth #501", "Booth #502", "Booth #503"]
+  };
 
   // Mock voter data (would come from API)
   const voterData = {
@@ -59,13 +108,76 @@ const EditVoter = () => {
     dob: "1990-05-15",
     state: "Maharashtra",
     district: "Mumbai",
-    booth: "Booth #123, Municipal School",
+    loksabhaWard: "Mumbai North",
+    vidhansabhaWard: "Borivali",
+    localbody: "Borivali Municipal Corp",
+    ward: "Ward 1",
+    booth: "Booth #101",
   };
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: voterData,
   });
+
+  // Set up initial dropdown values based on voter data
+  useEffect(() => {
+    if (voterData.district) {
+      setLoksabhas(allLoksabhas[voterData.district as keyof typeof allLoksabhas] || []);
+    }
+    if (voterData.loksabhaWard) {
+      setVidhansabhas(allVidhansabhas[voterData.loksabhaWard as keyof typeof allVidhansabhas] || []);
+    }
+    if (voterData.vidhansabhaWard) {
+      setLocalbodies(allLocalBodies[voterData.vidhansabhaWard as keyof typeof allLocalBodies] || []);
+    }
+    if (voterData.localbody) {
+      setWards(allWards[voterData.localbody as keyof typeof allWards] || []);
+    }
+    if (voterData.ward) {
+      setBooths(allBooths[voterData.ward as keyof typeof allBooths] || []);
+    }
+  }, []);
+
+  // Handle loksabha change to update vidhansabha dropdown
+  const handleLoksabhaChange = (loksabha: string) => {
+    form.setValue("loksabhaWard", loksabha);
+    form.setValue("vidhansabhaWard", "");
+    form.setValue("localbody", "");
+    form.setValue("ward", "");
+    form.setValue("booth", "");
+    setVidhansabhas(allVidhansabhas[loksabha as keyof typeof allVidhansabhas] || []);
+    setLocalbodies([]);
+    setWards([]);
+    setBooths([]);
+  };
+
+  // Handle vidhansabha change to update localbody dropdown
+  const handleVidhansabhaChange = (vidhansabha: string) => {
+    form.setValue("vidhansabhaWard", vidhansabha);
+    form.setValue("localbody", "");
+    form.setValue("ward", "");
+    form.setValue("booth", "");
+    setLocalbodies(allLocalBodies[vidhansabha as keyof typeof allLocalBodies] || []);
+    setWards([]);
+    setBooths([]);
+  };
+
+  // Handle localbody change to update ward dropdown
+  const handleLocalbodyChange = (localbody: string) => {
+    form.setValue("localbody", localbody);
+    form.setValue("ward", "");
+    form.setValue("booth", "");
+    setWards(allWards[localbody as keyof typeof allWards] || []);
+    setBooths([]);
+  };
+
+  // Handle ward change to update booth dropdown
+  const handleWardChange = (ward: string) => {
+    form.setValue("ward", ward);
+    form.setValue("booth", "");
+    setBooths(allBooths[ward as keyof typeof allBooths] || []);
+  };
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     // In a real application, this would send data to a backend API
@@ -174,11 +286,150 @@ const EditVoter = () => {
 
                   <FormField
                     control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State*</FormLabel>
+                        <FormControl>
+                          <Input value={user?.state || field.value} readOnly {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="district"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>District*</FormLabel>
+                        <FormControl>
+                          <Input value={user?.district || field.value} readOnly {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="loksabhaWard"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Lok Sabha Constituency*</FormLabel>
+                        <Select 
+                          onValueChange={(value) => handleLoksabhaChange(value)} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Lok Sabha constituency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {loksabhas.map((loksabha) => (
+                              <SelectItem key={loksabha} value={loksabha}>{loksabha}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="vidhansabhaWard"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vidhan Sabha Constituency*</FormLabel>
+                        <Select 
+                          onValueChange={(value) => handleVidhansabhaChange(value)} 
+                          defaultValue={field.value}
+                          disabled={vidhansabhas.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Vidhan Sabha constituency" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {vidhansabhas.map((vidhansabha) => (
+                              <SelectItem key={vidhansabha} value={vidhansabha}>{vidhansabha}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="localbody"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Local Body*</FormLabel>
+                        <Select 
+                          onValueChange={(value) => handleLocalbodyChange(value)} 
+                          defaultValue={field.value}
+                          disabled={localbodies.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select local body" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {localbodies.map((localbody) => (
+                              <SelectItem key={localbody} value={localbody}>{localbody}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ward"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ward*</FormLabel>
+                        <Select 
+                          onValueChange={(value) => handleWardChange(value)} 
+                          defaultValue={field.value}
+                          disabled={wards.length === 0}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select ward" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {wards.map((ward) => (
+                              <SelectItem key={ward} value={ward}>{ward}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
                     name="booth"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Booth*</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                          disabled={booths.length === 0}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select booth" />
