@@ -7,6 +7,13 @@ import { UserPlus, Search, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const SuperadminCandidates = () => {
   const { toast } = useToast();
@@ -16,8 +23,8 @@ const SuperadminCandidates = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock candidates data
-  const allCandidates = [
+  // Mock candidates data with useState to allow updates
+  const [candidates, setCandidates] = useState([
     { 
       id: 1, 
       name: "Rajesh Kumar", 
@@ -63,10 +70,10 @@ const SuperadminCandidates = () => {
       election: "Lok Sabha Elections 2025",
       status: "Pending"
     }
-  ];
+  ]);
 
   // Filter candidates based on search query and filters
-  const filteredCandidates = allCandidates.filter(candidate => {
+  const filteredCandidates = candidates.filter(candidate => {
     const matchesSearch = searchQuery === '' || 
       candidate.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
       candidate.party.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,7 +86,7 @@ const SuperadminCandidates = () => {
   });
 
   // Get unique elections for filter dropdown
-  const elections = [...new Set(allCandidates.map(candidate => candidate.election))];
+  const elections = [...new Set(candidates.map(candidate => candidate.election))];
 
   const handleEditCandidate = (id: number) => {
     navigate(`/superadmin/candidates/edit/${id}`);
@@ -89,6 +96,18 @@ const SuperadminCandidates = () => {
     toast({
       title: "Delete Candidate",
       description: `Deleting candidate with ID: ${id}`,
+    });
+  };
+
+  // New function to update candidate status
+  const updateCandidateStatus = (id: number, newStatus: string) => {
+    setCandidates(candidates.map(candidate => 
+      candidate.id === id ? { ...candidate, status: newStatus } : candidate
+    ));
+    
+    toast({
+      title: "Status Updated",
+      description: `Candidate status changed to ${newStatus}`,
     });
   };
 
@@ -175,12 +194,49 @@ const SuperadminCandidates = () => {
                       <td className="px-6 py-4">{candidate.constituency}</td>
                       <td className="px-6 py-4">{candidate.election}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                          ${candidate.status === 'Approved' ? 'bg-green-100 text-green-800' : 
-                          candidate.status === 'Rejected' ? 'bg-red-100 text-red-800' : 
-                          'bg-yellow-100 text-yellow-800'}`}>
-                          {candidate.status}
-                        </span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span 
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer
+                                ${candidate.status === 'Approved' ? 'bg-green-100 text-green-800' : 
+                                candidate.status === 'Rejected' ? 'bg-red-100 text-red-800' : 
+                                'bg-yellow-100 text-yellow-800'}`}
+                            >
+                              {candidate.status}
+                            </span>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56">
+                            <div className="space-y-4">
+                              <h4 className="font-medium">Update Status</h4>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`approved-${candidate.id}`}>Approved</Label>
+                                  <Switch 
+                                    id={`approved-${candidate.id}`} 
+                                    checked={candidate.status === 'Approved'}
+                                    onCheckedChange={() => updateCandidateStatus(candidate.id, 'Approved')}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`pending-${candidate.id}`}>Pending</Label>
+                                  <Switch 
+                                    id={`pending-${candidate.id}`} 
+                                    checked={candidate.status === 'Pending'}
+                                    onCheckedChange={() => updateCandidateStatus(candidate.id, 'Pending')}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`rejected-${candidate.id}`}>Rejected</Label>
+                                  <Switch 
+                                    id={`rejected-${candidate.id}`} 
+                                    checked={candidate.status === 'Rejected'}
+                                    onCheckedChange={() => updateCandidateStatus(candidate.id, 'Rejected')}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">
