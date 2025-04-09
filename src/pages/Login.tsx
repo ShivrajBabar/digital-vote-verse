@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Vote } from 'lucide-react';
+import { electionTypes } from '@/utils/locationData';
 
 const Login = () => {
   const { login, loading } = useAuth();
@@ -116,11 +117,9 @@ const Login = () => {
                       <SelectValue placeholder="Select election type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Lok Sabha">Lok Sabha</SelectItem>
-                      <SelectItem value="Vidhan Sabha">Vidhan Sabha</SelectItem>
-                      <SelectItem value="Local Area">Local Area</SelectItem>
-                      <SelectItem value="Ward">Ward</SelectItem>
-                      <SelectItem value="Booth">Booth</SelectItem>
+                      {electionTypes.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
