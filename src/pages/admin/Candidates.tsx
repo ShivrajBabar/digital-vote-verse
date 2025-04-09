@@ -86,12 +86,12 @@ const AdminCandidates = () => {
             />
           </div>
           <select className="border rounded-md px-4 py-2">
-            <option value="">All Elections</option>
+            <option value="all">All Elections</option>
             <option value="lok-sabha">Lok Sabha Elections</option>
             <option value="municipal">Municipal Corporation Elections</option>
           </select>
           <select className="border rounded-md px-4 py-2">
-            <option value="">All Parties</option>
+            <option value="all">All Parties</option>
             <option value="democratic">Democratic Party</option>
             <option value="progressive">Progressive Alliance</option>
             <option value="national">National Front</option>

@@ -12,8 +12,8 @@ const SuperadminCandidates = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  const [electionFilter, setElectionFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [electionFilter, setElectionFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Mock candidates data
@@ -72,8 +72,8 @@ const SuperadminCandidates = () => {
       candidate.party.toLowerCase().includes(searchQuery.toLowerCase()) ||
       candidate.constituency.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesElection = electionFilter === '' || candidate.election === electionFilter;
-    const matchesStatus = statusFilter === '' || candidate.status === statusFilter;
+    const matchesElection = electionFilter === 'all' || candidate.election === electionFilter;
+    const matchesStatus = statusFilter === 'all' || candidate.status === statusFilter;
     
     return matchesSearch && matchesElection && matchesStatus;
   });
@@ -124,7 +124,7 @@ const SuperadminCandidates = () => {
                 <SelectValue placeholder="All Elections" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Elections</SelectItem>
+                <SelectItem value="all">All Elections</SelectItem>
                 {elections.map((election) => (
                   <SelectItem key={election} value={election}>{election}</SelectItem>
                 ))}
@@ -138,7 +138,7 @@ const SuperadminCandidates = () => {
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="Approved">Approved</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="Rejected">Rejected</SelectItem>
