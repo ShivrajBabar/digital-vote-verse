@@ -12,6 +12,7 @@ import SuperadminDashboard from "./pages/superadmin/Dashboard";
 import SuperadminCandidates from "./pages/superadmin/Candidates";
 import SuperadminAdmins from "./pages/superadmin/Admins";
 import SuperadminElections from "./pages/superadmin/Elections";
+import SuperadminResults from "./pages/superadmin/Results";
 import SuperadminProfile from "./pages/superadmin/Profile";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminVoters from "./pages/admin/Voters";
@@ -20,9 +21,10 @@ import AdminProfile from "./pages/admin/Profile";
 import VoterDashboard from "./pages/voter/Dashboard";
 import VoterProfile from "./pages/voter/Profile";
 import VoterElections from "./pages/voter/Elections";
+import VoterResults from "./pages/voter/Results";
 import Index from "./pages/Index";
 
-// Import the new form pages
+// Import the form pages
 import RegisterCandidate from "./pages/superadmin/RegisterCandidate";
 import EditCandidate from "./pages/superadmin/EditCandidate";
 import RegisterAdmin from "./pages/superadmin/RegisterAdmin";
@@ -108,6 +110,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="superadmin">
                   <SuperadminElections />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/superadmin/results" 
+              element={
+                <ProtectedRoute requiredRole="superadmin">
+                  <SuperadminResults />
                 </ProtectedRoute>
               } 
             />
@@ -208,6 +218,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="voter">
                   <VoterElections />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/voter/results" 
+              element={
+                <ProtectedRoute requiredRole="voter">
+                  <VoterResults />
                 </ProtectedRoute>
               } 
             />

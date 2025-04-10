@@ -21,6 +21,7 @@ type Candidate = {
   symbol: string;
   election: string;
   status: string;
+  photoUrl: string; // Added photo URL
 };
 
 const AdminCandidates = () => {
@@ -29,7 +30,7 @@ const AdminCandidates = () => {
   const [viewCandidate, setViewCandidate] = useState<Candidate | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Mock candidates data for admin's constituency
+  // Mock candidates data for admin's constituency with photo URLs
   const candidates = [
     { 
       id: 1, 
@@ -37,7 +38,8 @@ const AdminCandidates = () => {
       party: 'Democratic Party', 
       symbol: '🌸 Flower',
       election: 'Lok Sabha Elections 2025',
-      status: 'Approved'
+      status: 'Approved',
+      photoUrl: 'https://randomuser.me/api/portraits/men/32.jpg'
     },
     { 
       id: 2, 
@@ -45,7 +47,8 @@ const AdminCandidates = () => {
       party: 'Progressive Alliance', 
       symbol: '🌿 Leaf',
       election: 'Lok Sabha Elections 2025',
-      status: 'Approved'
+      status: 'Approved',
+      photoUrl: 'https://randomuser.me/api/portraits/women/44.jpg'
     },
     { 
       id: 3, 
@@ -53,7 +56,8 @@ const AdminCandidates = () => {
       party: 'National Front', 
       symbol: '🌞 Sun',
       election: 'Municipal Corporation Elections',
-      status: 'Pending'
+      status: 'Pending',
+      photoUrl: 'https://randomuser.me/api/portraits/men/67.jpg'
     },
     { 
       id: 4, 
@@ -61,17 +65,14 @@ const AdminCandidates = () => {
       party: 'People\'s Party', 
       symbol: '🏵️ Rosette',
       election: 'Lok Sabha Elections 2025',
-      status: 'Approved'
+      status: 'Approved',
+      photoUrl: 'https://randomuser.me/api/portraits/women/22.jpg'
     }
   ];
 
   const handleViewCandidate = (candidate: Candidate) => {
     setViewCandidate(candidate);
     setDialogOpen(true);
-    toast({
-      title: "View Candidate",
-      description: `Viewing candidate: ${candidate.name}`,
-    });
   };
 
   const handleDownloadCandidateList = () => {
@@ -129,7 +130,7 @@ const AdminCandidates = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="px-4 py-3 text-left">ID</th>
+                    <th className="px-4 py-3 text-left">Photo</th>
                     <th className="px-4 py-3 text-left">Name</th>
                     <th className="px-4 py-3 text-left">Party</th>
                     <th className="px-4 py-3 text-left">Symbol</th>
@@ -141,7 +142,15 @@ const AdminCandidates = () => {
                 <tbody>
                   {candidates.map((candidate) => (
                     <tr key={candidate.id} className="border-b">
-                      <td className="px-4 py-3">{candidate.id}</td>
+                      <td className="px-4 py-3">
+                        <div className="h-10 w-10 rounded-full overflow-hidden">
+                          <img 
+                            src={candidate.photoUrl} 
+                            alt={candidate.name}
+                            className="h-full w-full object-cover" 
+                          />
+                        </div>
+                      </td>
                       <td className="px-4 py-3 font-medium">{candidate.name}</td>
                       <td className="px-4 py-3">{candidate.party}</td>
                       <td className="px-4 py-3">{candidate.symbol}</td>
@@ -181,6 +190,15 @@ const AdminCandidates = () => {
           </DialogHeader>
           {viewCandidate && (
             <div className="space-y-4">
+              <div className="flex justify-center mb-4">
+                <div className="h-32 w-32 rounded-full overflow-hidden">
+                  <img 
+                    src={viewCandidate.photoUrl} 
+                    alt={viewCandidate.name}
+                    className="h-full w-full object-cover" 
+                  />
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Name</p>

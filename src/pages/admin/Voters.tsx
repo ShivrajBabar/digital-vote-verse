@@ -1,18 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { UserPlus, Search, Edit, Trash2, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const AdminVoters = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Mock voters data
-  const voters = [
+  // Mock voters data with useState to allow updates
+  const [voters, setVoters] = useState([
     { 
       id: 1, 
       name: "Aditya Sharma", 
@@ -53,7 +60,7 @@ const AdminVoters = () => {
       booth: "Booth #145, Community Hall",
       status: "Pending"
     }
-  ];
+  ]);
 
   const handleEditVoter = (id: number) => {
     navigate(`/admin/voters/edit/${id}`);
@@ -70,6 +77,18 @@ const AdminVoters = () => {
     toast({
       title: "Credentials Sent",
       description: `Login credentials have been sent to voter with ID: ${id}`,
+    });
+  };
+
+  // Function to update voter status
+  const updateVoterStatus = (id: number, newStatus: string) => {
+    setVoters(voters.map(voter => 
+      voter.id === id ? { ...voter, status: newStatus } : voter
+    ));
+    
+    toast({
+      title: "Status Updated",
+      description: `Voter status changed to ${newStatus}`,
     });
   };
 
@@ -135,10 +154,37 @@ const AdminVoters = () => {
                       <td className="px-6 py-4">{voter.phone}</td>
                       <td className="px-6 py-4">{voter.booth}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                          ${voter.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                          {voter.status}
-                        </span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer
+                              ${voter.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                              {voter.status}
+                            </span>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56">
+                            <div className="space-y-4">
+                              <h4 className="font-medium">Update Status</h4>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`verified-${voter.id}`}>Verified</Label>
+                                  <Switch 
+                                    id={`verified-${voter.id}`} 
+                                    checked={voter.status === 'Verified'}
+                                    onCheckedChange={() => updateVoterStatus(voter.id, 'Verified')}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`pending-${voter.id}`}>Pending</Label>
+                                  <Switch 
+                                    id={`pending-${voter.id}`} 
+                                    checked={voter.status === 'Pending'}
+                                    onCheckedChange={() => updateVoterStatus(voter.id, 'Pending')}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">

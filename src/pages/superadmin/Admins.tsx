@@ -1,18 +1,25 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { UserPlus, Search, Edit, Trash2, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { Link, useNavigate } from 'react-router-dom';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const SuperadminAdmins = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Mock admins data
-  const admins = [
+  // Mock admins data with useState to allow updates
+  const [admins, setAdmins] = useState([
     { 
       id: 1, 
       name: "Vikram Singh", 
@@ -53,7 +60,7 @@ const SuperadminAdmins = () => {
       constituency: "Chennai South",
       status: "Pending"
     }
-  ];
+  ]);
 
   const handleEditAdmin = (id: number) => {
     navigate(`/superadmin/admins/edit/${id}`);
@@ -70,6 +77,18 @@ const SuperadminAdmins = () => {
     toast({
       title: "Credentials Sent",
       description: `Login credentials have been sent to admin with ID: ${id}`,
+    });
+  };
+
+  // Function to update admin status
+  const updateAdminStatus = (id: number, newStatus: string) => {
+    setAdmins(admins.map(admin => 
+      admin.id === id ? { ...admin, status: newStatus } : admin
+    ));
+    
+    toast({
+      title: "Status Updated",
+      description: `Admin status changed to ${newStatus}`,
     });
   };
 
@@ -136,12 +155,49 @@ const SuperadminAdmins = () => {
                       <td className="px-6 py-4">{admin.phone}</td>
                       <td className="px-6 py-4">{admin.constituency}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                          ${admin.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                          admin.status === 'Inactive' ? 'bg-red-100 text-red-800' : 
-                          'bg-yellow-100 text-yellow-800'}`}>
-                          {admin.status}
-                        </span>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span 
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer
+                                ${admin.status === 'Active' ? 'bg-green-100 text-green-800' : 
+                                admin.status === 'Inactive' ? 'bg-red-100 text-red-800' : 
+                                'bg-yellow-100 text-yellow-800'}`}
+                            >
+                              {admin.status}
+                            </span>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56">
+                            <div className="space-y-4">
+                              <h4 className="font-medium">Update Status</h4>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`active-${admin.id}`}>Active</Label>
+                                  <Switch 
+                                    id={`active-${admin.id}`} 
+                                    checked={admin.status === 'Active'}
+                                    onCheckedChange={() => updateAdminStatus(admin.id, 'Active')}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`inactive-${admin.id}`}>Inactive</Label>
+                                  <Switch 
+                                    id={`inactive-${admin.id}`} 
+                                    checked={admin.status === 'Inactive'}
+                                    onCheckedChange={() => updateAdminStatus(admin.id, 'Inactive')}
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <Label htmlFor={`pending-${admin.id}`}>Pending</Label>
+                                  <Switch 
+                                    id={`pending-${admin.id}`} 
+                                    checked={admin.status === 'Pending'}
+                                    onCheckedChange={() => updateAdminStatus(admin.id, 'Pending')}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end space-x-2">
