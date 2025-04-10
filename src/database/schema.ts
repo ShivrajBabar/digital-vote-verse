@@ -100,3 +100,26 @@ export interface CandidateResult {
   created_at: Date;
   updated_at: Date;
 }
+
+// Extended interfaces for API responses
+export interface ElectionResultWithDetails extends ElectionResult {
+  election_name: string;
+  constituency_name: string;
+  winner_name: string;
+  winner_party: string;
+  winner_photo?: string;
+  candidates: CandidateResultWithDetails[];
+}
+
+export interface CandidateResultWithDetails extends CandidateResult {
+  name: string;
+  party: string;
+  photoUrl?: string;
+  symbol?: string;
+  user_id: string;
+}
+
+// Add UUID package for user ID generation
+export interface UUID {
+  v4(): string;
+}
