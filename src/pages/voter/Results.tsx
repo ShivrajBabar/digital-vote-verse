@@ -32,7 +32,7 @@ const VoterResults = () => {
     }
   });
   
-  // Fetch published results
+  // Fetch published results - ensure only published results are shown (superadmin confirmation)
   const { data: results, isLoading: resultsLoading } = useQuery({
     queryKey: ['voter-results', selectedElection],
     queryFn: async () => {
@@ -81,7 +81,7 @@ const VoterResults = () => {
     <Layout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-          <ResultsPageHeader />
+          <ResultsPageHeader electionCount={results?.length || 0} />
         </div>
 
         <ElectionSelector 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
 import { UserPlus, Search, Edit, Trash2, Mail } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   Popover,
   PopoverContent,
@@ -13,84 +13,134 @@ import {
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { UserService } from '@/api/apiService';
 
 const SuperadminAdmins = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Mock admins data with useState to allow updates
-  const [admins, setAdmins] = useState([
-    { 
-      id: 1, 
-      name: "Vikram Singh", 
-      email: "vikram@example.com", 
-      phone: "9876543210", 
-      constituency: "Mumbai North",
-      status: "Active"
-    },
-    { 
-      id: 2, 
-      name: "Shreya Patel", 
-      email: "shreya@example.com", 
-      phone: "9876543211", 
-      constituency: "Mumbai South",
-      status: "Active"
-    },
-    { 
-      id: 3, 
-      name: "Ramesh Gupta", 
-      email: "ramesh@example.com", 
-      phone: "9876543212", 
-      constituency: "Delhi East",
-      status: "Inactive"
-    },
-    { 
-      id: 4, 
-      name: "Anjali Desai", 
-      email: "anjali@example.com", 
-      phone: "9876543213", 
-      constituency: "Bangalore Central",
-      status: "Active"
-    },
-    { 
-      id: 5, 
-      name: "Rahul Mehta", 
-      email: "rahul@example.com", 
-      phone: "9876543214", 
-      constituency: "Chennai South",
-      status: "Pending"
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterState, setFilterState] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'ascending' });
+  
+  // Fetch admins using React Query
+  const { data: admins = [], isLoading, error } = useQuery({
+    queryKey: ['admins'],
+    queryFn: async () => {
+      try {
+        const response = await UserService.getAllUsers('admin');
+        return response || [];
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+        throw error;
+      }
     }
-  ]);
-
-  const handleEditAdmin = (id: number) => {
-    navigate(`/superadmin/admins/edit/${id}`);
+  });
+  
+  // Update admin status mutation
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+      return await UserService.updateUserStatus(id, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admins'] });
+      toast({
+        title: "Status Updated",
+        description: "Admin status has been updated successfully",
+      });
+    }
+  });
+  
+  // Delete admin mutation
+  const deleteAdminMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await UserService.deleteUser(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admins'] });
+      toast({
+        title: "Admin Deleted",
+        description: "Admin has been deleted successfully",
+      });
+    }
+  });
+  
+  // Get unique states from admins data
+  const states = [...new Set(admins.map((admin: any) => admin.state || ''))].filter(Boolean);
+  
+  const handleDeleteAdmin = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this admin?")) {
+      deleteAdminMutation.mutate(id);
+    }
   };
-
-  const handleDeleteAdmin = (id: number) => {
-    toast({
-      title: "Delete Admin",
-      description: `Deleting admin with ID: ${id}`,
-    });
-  };
-
-  const handleSendCredentials = (id: number) => {
+  
+  const handleSendCredentials = (email: string) => {
     toast({
       title: "Credentials Sent",
-      description: `Login credentials have been sent to admin with ID: ${id}`,
+      description: `Login credentials have been sent to ${email}`,
     });
   };
-
-  // Function to update admin status
-  const updateAdminStatus = (id: number, newStatus: string) => {
-    setAdmins(admins.map(admin => 
-      admin.id === id ? { ...admin, status: newStatus } : admin
-    ));
+  
+  // Update admin status
+  const updateAdminStatus = (id: string, newStatus: string) => {
+    updateStatusMutation.mutate({ id, status: newStatus });
+  };
+  
+  // Sort function
+  const requestSort = (key: string) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  // Filter and sort admins
+  const filteredAdmins = React.useMemo(() => {
+    let filtered = [...admins];
     
-    toast({
-      title: "Status Updated",
-      description: `Admin status changed to ${newStatus}`,
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter((admin: any) => 
+        admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        admin.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply state filter
+    if (filterState) {
+      filtered = filtered.filter((admin: any) => admin.state === filterState);
+    }
+    
+    // Apply status filter
+    if (filterStatus) {
+      filtered = filtered.filter((admin: any) => admin.status === filterStatus);
+    }
+    
+    // Apply sorting
+    filtered.sort((a: any, b: any) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) {
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      }
+      if (a[sortConfig.key] > b[sortConfig.key]) {
+        return sortConfig.direction === 'ascending' ? 1 : -1;
+      }
+      return 0;
     });
-  };
+    
+    return filtered;
+  }, [admins, searchTerm, filterState, filterStatus, sortConfig]);
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="p-4 bg-red-50 text-red-500 rounded-md">
+          Error loading admins data. Please try again later.
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -111,109 +161,172 @@ const SuperadminAdmins = () => {
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search admins..."
+              placeholder="Search admins by name or email..."
               className="pl-10 pr-4 py-2 border rounded-md w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <select className="border rounded-md px-4 py-2">
-            <option value="">All Constituencies</option>
-            <option value="mumbai-north">Mumbai North</option>
-            <option value="delhi-east">Delhi East</option>
-            <option value="bangalore-central">Bangalore Central</option>
+          <select 
+            className="border rounded-md px-4 py-2"
+            value={filterState}
+            onChange={(e) => setFilterState(e.target.value)}
+          >
+            <option value="">All States</option>
+            {states.map((state) => (
+              <option key={state} value={state}>{state}</option>
+            ))}
           </select>
-          <select className="border rounded-md px-4 py-2">
+          <select 
+            className="border rounded-md px-4 py-2"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
             <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
+            <option value="Active">Active</option>
+            <option value="Pending">Pending</option>
+            <option value="Inactive">Inactive</option>
           </select>
         </div>
 
         {/* Admins Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Constituency Admins</CardTitle>
+            <CardTitle>Registered Admins</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3">Name</th>
-                    <th className="px-6 py-3">Email</th>
-                    <th className="px-6 py-3">Phone</th>
-                    <th className="px-6 py-3">Constituency</th>
-                    <th className="px-6 py-3">Status</th>
+                    <th 
+                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('name')}
+                    >
+                      Name {sortConfig.key === 'name' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th 
+                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('email')}
+                    >
+                      Email {sortConfig.key === 'email' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th 
+                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('constituency_name')}
+                    >
+                      Constituency {sortConfig.key === 'constituency_name' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th 
+                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('state')}
+                    >
+                      State {sortConfig.key === 'state' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
+                    <th 
+                      className="px-6 py-3 cursor-pointer hover:bg-gray-100"
+                      onClick={() => requestSort('status')}
+                    >
+                      Status {sortConfig.key === 'status' && (
+                        <span>{sortConfig.direction === 'ascending' ? '↑' : '↓'}</span>
+                      )}
+                    </th>
                     <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {admins.map((admin) => (
-                    <tr key={admin.id} className="border-b hover:bg-gray-50">
-                      <td className="px-6 py-4 font-medium">{admin.name}</td>
-                      <td className="px-6 py-4">{admin.email}</td>
-                      <td className="px-6 py-4">{admin.phone}</td>
-                      <td className="px-6 py-4">{admin.constituency}</td>
-                      <td className="px-6 py-4">
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <span 
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center">Loading admins...</td>
+                    </tr>
+                  ) : filteredAdmins.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-4 text-center">No admins found</td>
+                    </tr>
+                  ) : (
+                    filteredAdmins.map((admin: any) => (
+                      <tr key={admin.id} className="border-b hover:bg-gray-50">
+                        <td className="px-6 py-4 font-medium">{admin.name}</td>
+                        <td className="px-6 py-4">{admin.email}</td>
+                        <td className="px-6 py-4">{admin.constituency_name || 'Not assigned'}</td>
+                        <td className="px-6 py-4">{admin.state || 'Not assigned'}</td>
+                        <td className="px-6 py-4">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer
                                 ${admin.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                                admin.status === 'Inactive' ? 'bg-red-100 text-red-800' : 
-                                'bg-yellow-100 text-yellow-800'}`}
-                            >
-                              {admin.status}
-                            </span>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-56">
-                            <div className="space-y-4">
-                              <h4 className="font-medium">Update Status</h4>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <Label htmlFor={`active-${admin.id}`}>Active</Label>
-                                  <Switch 
-                                    id={`active-${admin.id}`} 
-                                    checked={admin.status === 'Active'}
-                                    onCheckedChange={() => updateAdminStatus(admin.id, 'Active')}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <Label htmlFor={`inactive-${admin.id}`}>Inactive</Label>
-                                  <Switch 
-                                    id={`inactive-${admin.id}`} 
-                                    checked={admin.status === 'Inactive'}
-                                    onCheckedChange={() => updateAdminStatus(admin.id, 'Inactive')}
-                                  />
-                                </div>
-                                <div className="flex items-center justify-between">
-                                  <Label htmlFor={`pending-${admin.id}`}>Pending</Label>
-                                  <Switch 
-                                    id={`pending-${admin.id}`} 
-                                    checked={admin.status === 'Pending'}
-                                    onCheckedChange={() => updateAdminStatus(admin.id, 'Pending')}
-                                  />
+                                  admin.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                  'bg-red-100 text-red-800'}`}>
+                                {admin.status}
+                              </span>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56">
+                              <div className="space-y-4">
+                                <h4 className="font-medium">Update Status</h4>
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Label htmlFor={`active-${admin.id}`}>Active</Label>
+                                    <Switch 
+                                      id={`active-${admin.id}`} 
+                                      checked={admin.status === 'Active'}
+                                      onCheckedChange={() => updateAdminStatus(admin.id, 'Active')}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <Label htmlFor={`pending-${admin.id}`}>Pending</Label>
+                                    <Switch 
+                                      id={`pending-${admin.id}`} 
+                                      checked={admin.status === 'Pending'}
+                                      onCheckedChange={() => updateAdminStatus(admin.id, 'Pending')}
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <Label htmlFor={`inactive-${admin.id}`}>Inactive</Label>
+                                    <Switch 
+                                      id={`inactive-${admin.id}`} 
+                                      checked={admin.status === 'Inactive'}
+                                      onCheckedChange={() => updateAdminStatus(admin.id, 'Inactive')}
+                                    />
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleEditAdmin(admin.id)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleSendCredentials(admin.id)}>
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDeleteAdmin(admin.id)}>
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            </PopoverContent>
+                          </Popover>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="ghost" size="sm" asChild>
+                              <Link to={`/superadmin/admins/edit/${admin.id}`}>
+                                <Edit className="h-4 w-4" />
+                              </Link>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleSendCredentials(admin.email)}
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => handleDeleteAdmin(admin.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
