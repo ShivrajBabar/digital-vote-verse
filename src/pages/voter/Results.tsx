@@ -14,9 +14,10 @@ import {
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
-import { ResultService } from '@/api/apiService';
+import { ResultService, ElectionService } from '@/api/apiService';
 import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
 interface CandidateResult {
   id: number;
@@ -53,9 +54,8 @@ const VoterResults = () => {
     queryFn: async () => {
       try {
         // Only fetch completed elections
-        const response = await fetch('/api/elections?status=Completed');
-        if (!response.ok) throw new Error('Failed to fetch elections');
-        return await response.json();
+        const response = await ElectionService.getAllElections({ status: 'Completed' });
+        return response || [];
       } catch (error) {
         console.error('Error fetching elections:', error);
         return [];
@@ -65,10 +65,10 @@ const VoterResults = () => {
   
   // Fetch published results
   const { data: results, isLoading: resultsLoading } = useQuery({
-    queryKey: ['results', selectedElection],
+    queryKey: ['voter-results', selectedElection],
     queryFn: async () => {
       try {
-        const filters: any = { published: true };
+        const filters: any = { published: true }; // Only fetch published results
         if (selectedElection !== 'all') {
           const electionId = parseInt(selectedElection);
           if (!isNaN(electionId)) {
@@ -170,37 +170,63 @@ const VoterResults = () => {
                     </div>
                   </div>
                   
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Candidate</TableHead>
-                        <TableHead>Party</TableHead>
-                        <TableHead>Votes</TableHead>
-                        <TableHead className="text-right">Percentage</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {result.candidates.map((candidate) => (
-                        <TableRow key={candidate.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <div className="h-10 w-10 rounded-full overflow-hidden">
-                                <img 
-                                  src={candidate.photoUrl || "/placeholder.svg"} 
-                                  alt={candidate.name}
-                                  className="h-full w-full object-cover" 
-                                />
-                              </div>
-                              <div>{candidate.name}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{candidate.party}</TableCell>
-                          <TableCell>{candidate.votes.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{candidate.votePercentage.toFixed(1)}%</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Candidate</TableHead>
+                            <TableHead>Party</TableHead>
+                            <TableHead>Votes</TableHead>
+                            <TableHead className="text-right">Percentage</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {result.candidates.map((candidate) => (
+                            <TableRow key={candidate.id} className={candidate.candidate_id === result.winner_id ? "bg-green-50" : ""}>
+                              <TableCell>
+                                <div className="flex items-center space-x-3">
+                                  <div className="h-10 w-10 rounded-full overflow-hidden">
+                                    <img 
+                                      src={candidate.photoUrl || "/placeholder.svg"} 
+                                      alt={candidate.name}
+                                      className="h-full w-full object-cover" 
+                                    />
+                                  </div>
+                                  <div>{candidate.name}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{candidate.party}</TableCell>
+                              <TableCell>{candidate.votes.toLocaleString()}</TableCell>
+                              <TableCell className="text-right">{candidate.votePercentage.toFixed(1)}%</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={result.candidates}
+                            nameKey="name"
+                            dataKey="votes"
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={80}
+                            label={({ name, votePercentage }) => `${name}: ${votePercentage.toFixed(1)}%`}
+                          >
+                            {result.candidates.map((candidate, index) => (
+                              <Cell key={`cell-${index}`} fill={getPartyColor(candidate.party)} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => [value.toLocaleString(), 'Votes']} />
+                          <Legend />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                   
                   <div className="relative pt-4">
                     <div className="flex space-x-1">
