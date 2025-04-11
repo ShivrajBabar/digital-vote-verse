@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -5,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext.jsx";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoute.jsx";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SuperadminDashboard from "./pages/superadmin/Dashboard";
@@ -22,7 +23,7 @@ import VoterDashboard from "./pages/voter/Dashboard";
 import VoterProfile from "./pages/voter/Profile";
 import VoterElections from "./pages/voter/Elections";
 import VoterResults from "./pages/voter/Results";
-import Index from "./pages/Index";
+import Index from "./pages/Index.jsx";
 
 // Import the form pages
 import RegisterCandidate from "./pages/superadmin/RegisterCandidate";
