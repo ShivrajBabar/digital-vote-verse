@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from '@/components/Layout';
@@ -41,7 +41,7 @@ const AdminVoters = () => {
   
   // Update voter status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+    mutationFn: async ({ id, status }) => {
       return await UserService.updateUserStatus(id, status);
     },
     onSuccess: () => {
@@ -51,7 +51,7 @@ const AdminVoters = () => {
   
   // Delete voter mutation
   const deleteVoterMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id) => {
       return await UserService.deleteUser(id);
     },
     onSuccess: () => {
@@ -60,13 +60,13 @@ const AdminVoters = () => {
   });
 
   // Get unique booth options from voters data
-  const boothOptions = [...new Set(voters.map((voter: any) => voter.booth || ''))].filter(Boolean);
+  const boothOptions = [...new Set(voters.map((voter) => voter.booth || ''))].filter(Boolean);
 
-  const handleEditVoter = (id: string) => {
+  const handleEditVoter = (id) => {
     navigate(`/admin/voters/edit/${id}`);
   };
 
-  const handleDeleteVoter = (id: string) => {
+  const handleDeleteVoter = (id) => {
     if (window.confirm('Are you sure you want to delete this voter?')) {
       deleteVoterMutation.mutate(id);
       toast({
@@ -76,7 +76,7 @@ const AdminVoters = () => {
     }
   };
 
-  const handleSendCredentials = (id: string) => {
+  const handleSendCredentials = (id) => {
     toast({
       title: "Credentials Sent",
       description: `Login credentials have been sent to the voter.`,
@@ -84,7 +84,7 @@ const AdminVoters = () => {
   };
 
   // Function to update voter status
-  const updateVoterStatus = (id: string, newStatus: string) => {
+  const updateVoterStatus = (id, newStatus) => {
     updateStatusMutation.mutate({ id, status: newStatus });
     toast({
       title: "Status Updated",
@@ -93,7 +93,7 @@ const AdminVoters = () => {
   };
 
   // Sort function
-  const requestSort = (key: string) => {
+  const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
@@ -107,7 +107,7 @@ const AdminVoters = () => {
     
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter((voter: any) => 
+      filtered = filtered.filter((voter) => 
         voter.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         voter.voter_id?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -115,16 +115,16 @@ const AdminVoters = () => {
     
     // Apply booth filter
     if (filterBooth) {
-      filtered = filtered.filter((voter: any) => voter.booth === filterBooth);
+      filtered = filtered.filter((voter) => voter.booth === filterBooth);
     }
     
     // Apply status filter
     if (filterStatus) {
-      filtered = filtered.filter((voter: any) => voter.status === filterStatus);
+      filtered = filtered.filter((voter) => voter.status === filterStatus);
     }
     
     // Apply sorting
-    filtered.sort((a: any, b: any) => {
+    filtered.sort((a, b) => {
       if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
@@ -257,7 +257,7 @@ const AdminVoters = () => {
                       <td colSpan={6} className="px-6 py-4 text-center">No voters found</td>
                     </tr>
                   ) : (
-                    filteredVoters.map((voter: any) => (
+                    filteredVoters.map((voter) => (
                       <tr key={voter.id} className="border-b hover:bg-gray-50">
                         <td className="px-6 py-4 font-medium">{voter.name}</td>
                         <td className="px-6 py-4">{voter.voter_id}</td>

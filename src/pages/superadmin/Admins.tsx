@@ -40,7 +40,7 @@ const SuperadminAdmins = () => {
   
   // Update admin status mutation
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string, status: string }) => {
+    mutationFn: async ({ id, status }) => {
       return await UserService.updateUserStatus(id, status);
     },
     onSuccess: () => {
@@ -54,7 +54,7 @@ const SuperadminAdmins = () => {
   
   // Delete admin mutation
   const deleteAdminMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id) => {
       return await UserService.deleteUser(id);
     },
     onSuccess: () => {
@@ -67,15 +67,15 @@ const SuperadminAdmins = () => {
   });
   
   // Get unique states from admins data
-  const states = [...new Set(admins.map((admin: any) => admin.state || ''))].filter(Boolean);
+  const states = [...new Set(admins.map((admin) => admin.state || ''))].filter(Boolean);
   
-  const handleDeleteAdmin = (id: string) => {
+  const handleDeleteAdmin = (id) => {
     if (window.confirm("Are you sure you want to delete this admin?")) {
       deleteAdminMutation.mutate(id);
     }
   };
   
-  const handleSendCredentials = (email: string) => {
+  const handleSendCredentials = (email) => {
     toast({
       title: "Credentials Sent",
       description: `Login credentials have been sent to ${email}`,
@@ -83,12 +83,12 @@ const SuperadminAdmins = () => {
   };
   
   // Update admin status
-  const updateAdminStatus = (id: string, newStatus: string) => {
+  const updateAdminStatus = (id, newStatus) => {
     updateStatusMutation.mutate({ id, status: newStatus });
   };
   
   // Sort function
-  const requestSort = (key: string) => {
+  const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
       direction = 'descending';
@@ -102,7 +102,7 @@ const SuperadminAdmins = () => {
     
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter((admin: any) => 
+      filtered = filtered.filter((admin) => 
         admin.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         admin.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -110,16 +110,16 @@ const SuperadminAdmins = () => {
     
     // Apply state filter
     if (filterState) {
-      filtered = filtered.filter((admin: any) => admin.state === filterState);
+      filtered = filtered.filter((admin) => admin.state === filterState);
     }
     
     // Apply status filter
     if (filterStatus) {
-      filtered = filtered.filter((admin: any) => admin.status === filterStatus);
+      filtered = filtered.filter((admin) => admin.status === filterStatus);
     }
     
     // Apply sorting
-    filtered.sort((a: any, b: any) => {
+    filtered.sort((a, b) => {
       if (a[sortConfig.key] < b[sortConfig.key]) {
         return sortConfig.direction === 'ascending' ? -1 : 1;
       }
@@ -252,7 +252,7 @@ const SuperadminAdmins = () => {
                       <td colSpan={6} className="px-6 py-4 text-center">No admins found</td>
                     </tr>
                   ) : (
-                    filteredAdmins.map((admin: any) => (
+                    filteredAdmins.map((admin) => (
                       <tr key={admin.id} className="border-b hover:bg-gray-50">
                         <td className="px-6 py-4 font-medium">{admin.name}</td>
                         <td className="px-6 py-4">{admin.email}</td>
