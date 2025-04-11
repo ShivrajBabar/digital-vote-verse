@@ -22,7 +22,7 @@ import AdminProfile from "./pages/admin/Profile";
 import VoterDashboard from "./pages/voter/Dashboard";
 import VoterProfile from "./pages/voter/Profile";
 import VoterElections from "./pages/voter/Elections";
-import VoterResults from "./pages/voter/Results";
+import VoterResults from "./pages/voter/Results.jsx";
 import Index from "./pages/Index.jsx";
 
 // Import the form pages
