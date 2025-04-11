@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext.jsx";
-import ProtectedRoute from "@/components/ProtectedRoute.jsx";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SuperadminDashboard from "./pages/superadmin/Dashboard";
@@ -25,17 +24,6 @@ import VoterElections from "./pages/voter/Elections";
 import VoterResults from "./pages/voter/Results.jsx";
 import Index from "./pages/Index.jsx";
 
-// Import the form pages
-import RegisterCandidate from "./pages/superadmin/RegisterCandidate";
-import EditCandidate from "./pages/superadmin/EditCandidate";
-import RegisterAdmin from "./pages/superadmin/RegisterAdmin";
-import EditAdmin from "./pages/superadmin/EditAdmin";
-import CreateElection from "./pages/superadmin/CreateElection";
-import EditElection from "./pages/superadmin/EditElection";
-import RegisterVoter from "./pages/admin/RegisterVoter";
-import EditVoter from "./pages/admin/EditVoter";
-
-// Create a new QueryClient instance outside of component
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -47,11 +35,9 @@ const App = () => {
           <Sonner />
           <AuthProvider>
             <Routes>
-              {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Index />} />
               
-              {/* Superadmin routes */}
               <Route 
                 path="/superadmin/dashboard" 
                 element={
@@ -149,7 +135,6 @@ const App = () => {
                 } 
               />
               
-              {/* Admin routes */}
               <Route 
                 path="/admin/dashboard" 
                 element={
@@ -199,7 +184,6 @@ const App = () => {
                 } 
               />
               
-              {/* Voter routes */}
               <Route 
                 path="/voter/dashboard" 
                 element={
@@ -233,7 +217,6 @@ const App = () => {
                 } 
               />
               
-              {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
