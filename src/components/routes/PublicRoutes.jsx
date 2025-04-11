@@ -2,7 +2,7 @@
 import React from "react";
 import { Route } from "react-router-dom";
 import Login from "@/pages/Login";
-import Index from "@/pages/Index.jsx";
+import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 
 const PublicRoutes = () => {
