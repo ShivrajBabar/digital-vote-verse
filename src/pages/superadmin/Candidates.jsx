@@ -32,6 +32,7 @@ const SuperadminCandidates = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [documentPreviewUrl, setDocumentPreviewUrl] = useState(null);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Mock candidates data with useState to allow updates
   const [candidates, setCandidates] = useState([
@@ -114,14 +115,19 @@ const SuperadminCandidates = () => {
     });
   };
 
-  // New function to view candidate document
+  // Updated function to view candidate document with proper functionality
   const handleViewDocument = async (id) => {
     try {
+      setLoading(true);
       // In a real app, this would fetch the document from the API
-      // For now, we'll simulate with a PDF URL
+      // const documentBlob = await CandidateService.getCandidateDocument(id);
+      // const pdfUrl = URL.createObjectURL(documentBlob);
+      
+      // For demo purposes, use a sample PDF
       const pdfUrl = `https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf`;
       setDocumentPreviewUrl(pdfUrl);
       setDocumentDialogOpen(true);
+      setLoading(false);
       
       toast({
         title: "Document Loaded",
@@ -129,6 +135,7 @@ const SuperadminCandidates = () => {
       });
     } catch (error) {
       console.error('Error fetching document:', error);
+      setLoading(false);
       toast({
         variant: "destructive",
         title: "Error",
@@ -140,13 +147,22 @@ const SuperadminCandidates = () => {
   // Send login credentials to the candidate via email
   const handleSendCredentials = async (candidate) => {
     try {
+      setLoading(true);
       // In a real app, this would call the API to send credentials
+      await AuthService.sendLoginCredentials(
+        candidate.email,
+        'tempPass123', // In real app would be generated
+        'candidate'
+      );
+      
+      setLoading(false);
       toast({
         title: "Email Sent",
         description: `Login credentials sent to ${candidate.name} at ${candidate.email}`,
       });
     } catch (error) {
       console.error('Error sending credentials:', error);
+      setLoading(false);
       toast({
         variant: "destructive",
         title: "Error",
@@ -299,10 +315,20 @@ const SuperadminCandidates = () => {
                           <Button variant="ghost" size="sm" onClick={() => handleEditCandidate(candidate.id)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleSendCredentials(candidate)}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleSendCredentials(candidate)}
+                            disabled={loading}
+                          >
                             <Mail className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleViewDocument(candidate.id)}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewDocument(candidate.id)}
+                            disabled={loading}
+                          >
                             <FileText className="h-4 w-4" />
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleDeleteCandidate(candidate.id)}>
