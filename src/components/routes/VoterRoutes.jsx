@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import VoterDashboard from "@/pages/voter/Dashboard";
 import VoterProfile from "@/pages/voter/Profile";
 import VoterElections from "@/pages/voter/Elections";
-import VoterResults from "@/pages/voter/Results.jsx";
+import VoterResults from "@/pages/voter/Results";
 
 const VoterRoutes = () => {
   return (

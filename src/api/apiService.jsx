@@ -1,6 +1,4 @@
-
 import axios from 'axios';
-import { User, Constituency, Election, Candidate, Booth, ElectionResult, CandidateResult } from '../database/schema';
 
 // Base URL for API
 const API_BASE_URL = '/api';
@@ -29,7 +27,7 @@ apiClient.interceptors.request.use(
 
 // Auth Services
 export const AuthService = {
-  login: async (email: string, password: string, role: string) => {
+  login: async (email, password, role) => {
     try {
       const response = await apiClient.post('/auth/login', { email, password, role });
       return response.data;
@@ -53,11 +51,25 @@ export const AuthService = {
       throw error;
     }
   },
+  
+  // Added: Email login credentials to users
+  sendLoginCredentials: async (email, tempPassword, role) => {
+    try {
+      const response = await apiClient.post('/auth/send-credentials', { 
+        email, 
+        tempPassword, 
+        role 
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 // User Services
 export const UserService = {
-  getAllUsers: async (role?: string) => {
+  getAllUsers: async (role) => {
     try {
       const response = await apiClient.get('/users', { params: { role } });
       return response.data;
@@ -65,7 +77,7 @@ export const UserService = {
       throw error;
     }
   },
-  getUserById: async (id: string) => {
+  getUserById: async (id) => {
     try {
       const response = await apiClient.get(`/users/${id}`);
       return response.data;
@@ -73,15 +85,25 @@ export const UserService = {
       throw error;
     }
   },
-  createUser: async (userData: Partial<User>) => {
+  createUser: async (userData) => {
     try {
       const response = await apiClient.post('/users', userData);
+      
+      // Send login credentials email if email is provided
+      if (userData.email) {
+        await AuthService.sendLoginCredentials(
+          userData.email,
+          userData.tempPassword || "tempPassword123",
+          userData.role
+        );
+      }
+      
       return response.data;
     } catch (error) {
       throw error;
     }
   },
-  updateUser: async (id: string, userData: Partial<User>) => {
+  updateUser: async (id, userData) => {
     try {
       const response = await apiClient.put(`/users/${id}`, userData);
       return response.data;
@@ -89,7 +111,7 @@ export const UserService = {
       throw error;
     }
   },
-  updateUserStatus: async (id: string, status: string) => {
+  updateUserStatus: async (id, status) => {
     try {
       const response = await apiClient.patch(`/users/${id}/status`, { status });
       return response.data;
@@ -97,7 +119,7 @@ export const UserService = {
       throw error;
     }
   },
-  deleteUser: async (id: string) => {
+  deleteUser: async (id) => {
     try {
       const response = await apiClient.delete(`/users/${id}`);
       return response.data;
@@ -109,7 +131,7 @@ export const UserService = {
 
 // Election Services
 export const ElectionService = {
-  getAllElections: async (filters?: any) => {
+  getAllElections: async (filters) => {
     try {
       const response = await apiClient.get('/elections', { params: filters });
       return response.data;
@@ -117,7 +139,7 @@ export const ElectionService = {
       throw error;
     }
   },
-  getElectionById: async (id: number) => {
+  getElectionById: async (id) => {
     try {
       const response = await apiClient.get(`/elections/${id}`);
       return response.data;
@@ -125,7 +147,7 @@ export const ElectionService = {
       throw error;
     }
   },
-  createElection: async (electionData: Partial<Election>) => {
+  createElection: async (electionData) => {
     try {
       const response = await apiClient.post('/elections', electionData);
       return response.data;
@@ -133,7 +155,7 @@ export const ElectionService = {
       throw error;
     }
   },
-  updateElection: async (id: number, electionData: Partial<Election>) => {
+  updateElection: async (id, electionData) => {
     try {
       const response = await apiClient.put(`/elections/${id}`, electionData);
       return response.data;
@@ -141,7 +163,7 @@ export const ElectionService = {
       throw error;
     }
   },
-  deleteElection: async (id: number) => {
+  deleteElection: async (id) => {
     try {
       const response = await apiClient.delete(`/elections/${id}`);
       return response.data;
@@ -153,7 +175,7 @@ export const ElectionService = {
 
 // Candidate Services
 export const CandidateService = {
-  getAllCandidates: async (filters?: any) => {
+  getAllCandidates: async (filters) => {
     try {
       const response = await apiClient.get('/candidates', { params: filters });
       return response.data;
@@ -161,7 +183,7 @@ export const CandidateService = {
       throw error;
     }
   },
-  getCandidateById: async (id: number) => {
+  getCandidateById: async (id) => {
     try {
       const response = await apiClient.get(`/candidates/${id}`);
       return response.data;
@@ -169,7 +191,7 @@ export const CandidateService = {
       throw error;
     }
   },
-  createCandidate: async (candidateData: Partial<Candidate>) => {
+  createCandidate: async (candidateData) => {
     try {
       const response = await apiClient.post('/candidates', candidateData);
       return response.data;
@@ -177,7 +199,7 @@ export const CandidateService = {
       throw error;
     }
   },
-  updateCandidate: async (id: number, candidateData: Partial<Candidate>) => {
+  updateCandidate: async (id, candidateData) => {
     try {
       const response = await apiClient.put(`/candidates/${id}`, candidateData);
       return response.data;
@@ -185,7 +207,7 @@ export const CandidateService = {
       throw error;
     }
   },
-  updateCandidateStatus: async (id: number, status: string) => {
+  updateCandidateStatus: async (id, status) => {
     try {
       const response = await apiClient.patch(`/candidates/${id}/status`, { status });
       return response.data;
@@ -193,9 +215,21 @@ export const CandidateService = {
       throw error;
     }
   },
-  deleteCandidate: async (id: number) => {
+  deleteCandidate: async (id) => {
     try {
       const response = await apiClient.delete(`/candidates/${id}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Added: View candidate document
+  getCandidateDocument: async (id) => {
+    try {
+      const response = await apiClient.get(`/candidates/${id}/document`, {
+        responseType: 'blob'
+      });
       return response.data;
     } catch (error) {
       throw error;
@@ -205,7 +239,7 @@ export const CandidateService = {
 
 // Voting Services
 export const VotingService = {
-  castVote: async (electionId: number, candidateId: number, boothId: number) => {
+  castVote: async (electionId, candidateId, boothId) => {
     try {
       const response = await apiClient.post('/votes/cast', { 
         election_id: electionId, 
@@ -217,7 +251,7 @@ export const VotingService = {
       throw error;
     }
   },
-  getVoterStatus: async (electionId: number) => {
+  getVoterStatus: async (electionId) => {
     try {
       const response = await apiClient.get(`/votes/status/${electionId}`);
       return response.data;
@@ -229,7 +263,7 @@ export const VotingService = {
 
 // Result Services
 export const ResultService = {
-  getAllResults: async (filters?: any) => {
+  getAllResults: async (filters) => {
     try {
       const response = await apiClient.get('/results', { params: filters });
       return response.data;
@@ -237,7 +271,7 @@ export const ResultService = {
       throw error;
     }
   },
-  getResultById: async (id: number) => {
+  getResultById: async (id) => {
     try {
       const response = await apiClient.get(`/results/${id}`);
       return response.data;
@@ -245,7 +279,7 @@ export const ResultService = {
       throw error;
     }
   },
-  publishResult: async (id: number, publish: boolean) => {
+  publishResult: async (id, publish) => {
     try {
       const response = await apiClient.patch(`/results/${id}/publish`, { published: publish });
       return response.data;
@@ -253,7 +287,7 @@ export const ResultService = {
       throw error;
     }
   },
-  generateResults: async (electionId: number, constituencyId?: number) => {
+  generateResults: async (electionId, constituencyId) => {
     try {
       const response = await apiClient.post('/results/generate', { 
         election_id: electionId,

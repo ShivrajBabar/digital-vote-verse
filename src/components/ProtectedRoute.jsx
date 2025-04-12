@@ -1,6 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const ProtectedRoute = ({
   children,
@@ -40,11 +42,7 @@ const ProtectedRoute = ({
 
   // Show loading state while checking authentication
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner message="Verifying your credentials..." />;
   }
 
   // If authenticated and correct role, render children
