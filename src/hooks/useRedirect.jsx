@@ -34,3 +34,5 @@ export const useRedirect = () => {
 
   return { loading };
 };
+
+export default useRedirect;

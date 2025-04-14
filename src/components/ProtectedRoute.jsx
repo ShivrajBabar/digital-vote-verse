@@ -1,52 +1,38 @@
 
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-const ProtectedRoute = ({
-  children,
-  requiredRole,
-}) => {
+const ProtectedRoute = ({ requiredRole, children }) => {
   const { user, isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // If not loading and not authenticated, redirect to login
-    if (!loading && !isAuthenticated) {
-      navigate('/login', { replace: true });
-      return;
-    }
-
-    // If authenticated but wrong role, redirect based on actual role
-    if (!loading && isAuthenticated && user) {
-      const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-      
-      if (!roles.includes(user.role)) {
-        switch (user.role) {
-          case 'superadmin':
-            navigate('/superadmin/dashboard', { replace: true });
-            break;
-          case 'admin':
-            navigate('/admin/dashboard', { replace: true });
-            break;
-          case 'voter':
-            navigate('/voter/dashboard', { replace: true });
-            break;
-          default:
-            navigate('/login', { replace: true });
-        }
-      }
-    }
-  }, [loading, isAuthenticated, user, requiredRole, navigate]);
-
-  // Show loading state while checking authentication
+  
+  // If auth is still loading, show loading spinner
   if (loading) {
-    return <LoadingSpinner message="Verifying your credentials..." />;
+    return <LoadingSpinner />;
   }
-
-  // If authenticated and correct role, render children
-  return isAuthenticated ? <>{children}</> : null;
+  
+  // If not authenticated, redirect to login
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // If role doesn't match, redirect to appropriate dashboard
+  if (requiredRole && user.role !== requiredRole) {
+    switch (user.role) {
+      case 'superadmin':
+        return <Navigate to="/superadmin/dashboard" replace />;
+      case 'admin':
+        return <Navigate to="/admin/dashboard" replace />;
+      case 'voter':
+        return <Navigate to="/voter/dashboard" replace />;
+      default:
+        return <Navigate to="/login" replace />;
+    }
+  }
+  
+  // If authorized, render the children
+  return children;
 };
 
 export default ProtectedRoute;

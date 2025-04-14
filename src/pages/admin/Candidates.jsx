@@ -80,7 +80,7 @@ const AdminCandidates = () => {
     });
   };
 
-  // Updated function to view candidate document with proper functionality
+  // Function to view candidate document
   const handleViewDocument = async (id) => {
     try {
       setLoading(true);

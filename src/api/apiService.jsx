@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 // Base URL for API
@@ -52,7 +53,7 @@ export const AuthService = {
     }
   },
   
-  // Added: Email login credentials to users
+  // Email login credentials to users
   sendLoginCredentials: async (email, tempPassword, role) => {
     try {
       const response = await apiClient.post('/auth/send-credentials', { 
@@ -224,7 +225,7 @@ export const CandidateService = {
     }
   },
   
-  // Added: View candidate document
+  // View candidate document
   getCandidateDocument: async (id) => {
     try {
       const response = await apiClient.get(`/candidates/${id}/document`, {

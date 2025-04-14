@@ -1,151 +1,118 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from "@/components/ui/use-toast";
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { AuthService } from '@/api/apiService';
+import { useToast } from '@/components/ui/use-toast';
 
-// Create the context with a default value
-const AuthContext = createContext({
-  user: null,
-  loading: true,
-  login: async () => {},
-  logout: () => {},
-  isAuthenticated: false,
-});
-
-// Mock user data for development
-const mockUsers = [
-  {
-    id: '1',
-    name: 'Super Admin',
-    email: 'superadmin@example.com',
-    role: 'superadmin',
-    photoUrl: '/placeholder.svg',
-  },
-  {
-    id: '2',
-    name: 'Admin User',
-    email: 'admin@example.com',
-    role: 'admin',
-    photoUrl: '/placeholder.svg',
-    constituency: 'Mumbai North',
-    state: 'Maharashtra',
-    district: 'Mumbai',
-  },
-  {
-    id: '3',
-    name: 'Voter User',
-    email: 'voter@example.com',
-    role: 'voter',
-    photoUrl: '/placeholder.svg',
-    constituency: 'Mumbai North',
-    state: 'Maharashtra',
-    district: 'Mumbai',
-    electionType: 'Lok Sabha',
-  },
-];
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if user is already logged in (from local storage)
+  // Check if user is already logged in (via localStorage)
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    const checkAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser));
+        const token = localStorage.getItem('authToken');
+        
+        if (token) {
+          // Get current user info
+          const userData = await AuthService.getCurrentUser();
+          setUser(userData);
+          setIsAuthenticated(true);
+        }
       } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('user');
+        console.error('Auth check failed:', error);
+        // Clear invalid token
+        localStorage.removeItem('authToken');
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+    
+    checkAuth();
   }, []);
 
-  // Mock login function
-  const login = async (email, password, role, electionType) => {
-    setLoading(true);
+  // Login function
+  const login = async (email, password, role) => {
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLoading(true);
+      const { token, user } = await AuthService.login(email, password, role);
       
-      // Find user in mock data (in production, this would be an API call)
-      const foundUser = mockUsers.find(u => 
-        u.email.toLowerCase() === email.toLowerCase() && u.role === role
-      );
+      // Store token in localStorage
+      localStorage.setItem('authToken', token);
       
-      if (!foundUser) {
-        throw new Error('Invalid credentials');
-      }
-
-      // For voter role, check if election type is provided
-      if (role === 'voter' && !electionType) {
-        throw new Error('Election type is required for voters');
-      }
-
-      // Update user data with election type if voter
-      const userData = role === 'voter' 
-        ? { ...foundUser, electionType } 
-        : foundUser;
-      
-      // Store user in localStorage and state
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
-      
-      // Navigate based on role
-      switch (role) {
-        case 'superadmin':
-          navigate('/superadmin/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
-          break;
-        case 'voter':
-          navigate('/voter/dashboard');
-          break;
-        default:
-          navigate('/');
-      }
+      setUser(user);
+      setIsAuthenticated(true);
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${userData.name}`,
+        description: `Welcome back, ${user.name}!`,
       });
+      
+      return user;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login failed:', error);
       toast({
-        title: "Login failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
+        title: "Login failed",
+        description: error.response?.data?.message || "Invalid credentials. Please try again.",
       });
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
   // Logout function
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    navigate('/login');
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
+  const logout = async () => {
+    try {
+      setLoading(true);
+      
+      // Call logout API
+      await AuthService.logout();
+      
+      // Clear localStorage
+      localStorage.removeItem('authToken');
+      
+      setUser(null);
+      setIsAuthenticated(false);
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: "Failed to log out. Please try again.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {
     user,
+    isAuthenticated,
     loading,
     login,
-    logout,
-    isAuthenticated: !!user,
+    logout
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Custom hook to use auth context
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext;
