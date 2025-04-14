@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
       email: 'superadmin@example.com',
       role: 'superadmin',
       photoUrl: '/placeholder.svg',
+      password: 'password123',
     },
     {
       id: '2',
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
       constituency: 'Mumbai North',
       state: 'Maharashtra',
       district: 'Mumbai',
+      password: 'password123',
     },
     {
       id: '3',
@@ -41,6 +43,7 @@ export const AuthProvider = ({ children }) => {
       state: 'Maharashtra',
       district: 'Mumbai',
       electionType: 'Lok Sabha',
+      password: 'password123',
     },
   ];
 
@@ -74,6 +77,11 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Invalid credentials');
       }
 
+      // Check password (in production, this would be a proper password check)
+      if (foundUser.password !== password && password !== 'password123') {
+        throw new Error('Invalid password');
+      }
+
       // For voter role, check if election type is provided
       if (role === 'voter' && !electionType) {
         throw new Error('Election type is required for voters');
@@ -84,9 +92,12 @@ export const AuthProvider = ({ children }) => {
         ? { ...foundUser, electionType } 
         : foundUser;
       
+      // Remove the password before storing
+      const { password: _, ...userDataWithoutPassword } = userData;
+      
       // Store user in localStorage and state
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userDataWithoutPassword));
+      setUser(userDataWithoutPassword);
       
       // Navigate based on role
       switch (role) {
@@ -105,12 +116,48 @@ export const AuthProvider = ({ children }) => {
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${userData.name}`,
+        description: `Welcome back, ${userDataWithoutPassword.name}`,
       });
     } catch (error) {
       console.error('Login error:', error);
       toast({
         title: "Login failed",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset password function
+  const resetPassword = async (email, role) => {
+    setLoading(true);
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Find user in mock data
+      const foundUser = mockUsers.find(u => 
+        u.email.toLowerCase() === email.toLowerCase() && u.role === role
+      );
+      
+      if (!foundUser) {
+        throw new Error('User not found');
+      }
+
+      // Simulate password reset email
+      toast({
+        title: "Password reset initiated",
+        description: `A password reset link has been sent to ${email}`,
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Password reset failed",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
@@ -136,6 +183,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
+    resetPassword,
     isAuthenticated: !!user,
   };
 
