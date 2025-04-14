@@ -1,52 +1,40 @@
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Search, ChevronDown, ChevronUp, DownloadIcon } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ResultService, ElectionService } from '@/api/apiService';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useToast } from '@/components/ui/use-toast';
+import { useLocation } from 'react-router-dom';
+import { Search, Download, Eye, CheckCircle, XCircle } from 'lucide-react';
+import ResultCard from '@/components/voter/results/ResultCard';
+import LoadingResults from '@/components/voter/results/LoadingResults';
+import EmptyResults from '@/components/voter/results/EmptyResults';
 
 const SuperadminResults = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedElection, setSelectedElection] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [expandedResult, setExpandedResult] = useState(null);
-  const [isGeneratingResults, setIsGeneratingResults] = useState(false);
-  const [selectedElectionForGeneration, setSelectedElectionForGeneration] = useState('');
-  const [isGenerationDialogOpen, setIsGenerationDialogOpen] = useState(false);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const electionFromUrl = queryParams.get('election');
   
-  // Fetch all elections
-  const { data: elections, isLoading: electionsLoading } = useQuery({
+  const [selectedElection, setSelectedElection] = useState(electionFromUrl || 'all');
+  const [publishStatus, setPublishStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('results');
+  
+  const queryClient = useQueryClient();
+  
+  // Fetch elections for the filter dropdown
+  const { data: elections = [], isLoading: electionsLoading } = useQuery({
     queryKey: ['elections'],
     queryFn: async () => {
       try {
-        // Only fetch completed elections
-        const data = await ElectionService.getAllElections({ status: 'Completed' });
-        return data || [];
+        const response = await ElectionService.getAllElections();
+        return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error('Error fetching elections:', error);
         return [];
@@ -54,21 +42,23 @@ const SuperadminResults = () => {
     }
   });
   
-  // Fetch results
-  const { data: results, isLoading: resultsLoading } = useQuery({
-    queryKey: ['admin-results', selectedElection],
+  // Fetch results based on filters
+  const { data: results = [], isLoading: resultsLoading } = useQuery({
+    queryKey: ['all-results', selectedElection, publishStatus],
     queryFn: async () => {
       try {
         const filters = {};
+        
         if (selectedElection !== 'all') {
-          const electionId = parseInt(selectedElection);
-          if (!isNaN(electionId)) {
-            filters.election_id = electionId;
-          }
+          filters.election_id = selectedElection;
         }
         
-        const data = await ResultService.getAllResults(filters);
-        return data || [];
+        if (publishStatus !== 'all') {
+          filters.published = publishStatus === 'published';
+        }
+        
+        const response = await ResultService.getAllResults(filters);
+        return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error('Error fetching results:', error);
         toast({
@@ -81,144 +71,89 @@ const SuperadminResults = () => {
     }
   });
   
-  // Mutation to toggle result publication
-  const togglePublishMutation = useMutation({
-    mutationFn: async ({ resultId, publish }) => {
-      return await ResultService.publishResult(resultId, publish);
+  // Publish/Unpublish result mutation
+  const publishMutation = useMutation({
+    mutationFn: async ({ id, publish }) => {
+      return await ResultService.publishResult(id, publish);
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['admin-results'] });
-      const action = variables.publish ? 'published' : 'unpublished';
+    onSuccess: () => {
+      queryClient.invalidateQueries(['all-results']);
       toast({
-        title: `Result ${action}`,
-        description: `Election results are now ${variables.publish ? 'visible' : 'hidden'} to voters`,
+        title: "Success",
+        description: "Result status updated successfully",
       });
     },
     onError: (error) => {
+      console.error('Publish error:', error);
       toast({
         title: "Error",
-        description: "Failed to update publication status",
+        description: "Failed to update result status",
         variant: "destructive"
       });
     }
   });
   
-  // Mutation to generate results
-  const generateResultsMutation = useMutation({
+  // Generate results mutation
+  const generateMutation = useMutation({
     mutationFn: async (electionId) => {
       return await ResultService.generateResults(electionId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-results'] });
-      setIsGenerationDialogOpen(false);
+      queryClient.invalidateQueries(['all-results']);
       toast({
-        title: "Results generated",
-        description: "Election results have been generated successfully",
+        title: "Success",
+        description: "Results generated successfully",
       });
     },
     onError: (error) => {
+      console.error('Generate error:', error);
       toast({
         title: "Error",
         description: "Failed to generate results",
         variant: "destructive"
       });
-    },
-    onSettled: () => {
-      setIsGeneratingResults(false);
-    }
-  });
-
-  // Delete election mutation
-  const deleteElectionMutation = useMutation({
-    mutationFn: async (electionId) => {
-      return await ElectionService.deleteElection(electionId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['elections'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-results'] });
-      toast({
-        title: "Election deleted",
-        description: "The election and its results have been deleted",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete election",
-        variant: "destructive"
-      });
     }
   });
   
-  // Filter results based on selected election and search query
-  const filteredResults = results 
-    ? results.filter((result) => {
-        const matchesElection = selectedElection === 'all' || result.election_id?.toString() === selectedElection;
-        const matchesSearch = searchQuery === '' || 
-          result.constituency_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          result.election_name?.toLowerCase().includes(searchQuery.toLowerCase());
-        
-        return matchesElection && matchesSearch;
-      })
-    : [];
-  
-  // Toggle expansion of candidate details
-  const toggleExpand = (resultId) => {
-    setExpandedResult(expandedResult === resultId ? null : resultId);
+  // Handle publish/unpublish
+  const togglePublish = (id, currentStatus) => {
+    publishMutation.mutate({ id, publish: !currentStatus });
   };
-
+  
   // Handle generate results
-  const handleGenerateResults = () => {
-    if (!selectedElectionForGeneration) {
-      toast({
-        title: "Election required",
-        description: "Please select an election to generate results for",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsGeneratingResults(true);
-    generateResultsMutation.mutate(parseInt(selectedElectionForGeneration));
-  };
-
-  // Handle delete election
-  const handleDeleteElection = (electionId) => {
-    if (window.confirm("Are you sure you want to delete this election? This action cannot be undone.")) {
-      deleteElectionMutation.mutate(electionId);
-    }
+  const generateResults = (electionId) => {
+    generateMutation.mutate(electionId);
   };
   
-  // Handle export results
-  const handleExportResults = () => {
-    toast({
-      title: "Results exported",
-      description: "Election results have been exported to CSV",
-    });
-  };
+  // Format election options for the dropdown
+  const electionOptions = Array.isArray(elections) ? elections.map(election => ({
+    id: election.id,
+    name: election.name,
+    status: election.status
+  })) : [];
   
-  // Display loading state
+  // Filter results based on search term
+  const filteredResults = Array.isArray(results) ? results.filter(result => {
+    if (!searchTerm) return true;
+    const searchString = searchTerm.toLowerCase();
+    return (
+      result.election_name?.toLowerCase().includes(searchString) ||
+      result.constituency_name?.toLowerCase().includes(searchString)
+    );
+  }) : [];
+  
+  console.log("Elections:", elections);
+  console.log("Election Options:", electionOptions);
+  console.log("Results:", results);
+  console.log("Filtered Results:", filteredResults);
+  
+  // Loading state
   if (resultsLoading) {
     return (
       <Layout>
         <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold">Election Results</h1>
-            <p className="text-gray-500">Manage and publish election results</p>
-          </div>
-          
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <CardHeader className="bg-gray-50 pb-2">
-                  <Skeleton className="h-6 w-48" />
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <Skeleton className="h-40 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <h1 className="text-2xl font-bold">Election Results</h1>
+          <LoadingResults />
         </div>
       </Layout>
     );
@@ -227,213 +162,166 @@ const SuperadminResults = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Election Results</h1>
           <div className="flex space-x-2">
-            <Dialog open={isGenerationDialogOpen} onOpenChange={setIsGenerationDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">Generate Results</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Generate Election Results</DialogTitle>
-                  <DialogDescription>
-                    Select an election to generate or update results. This will count all votes and determine winners.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="py-4">
-                  <Select 
-                    value={selectedElectionForGeneration} 
-                    onValueChange={setSelectedElectionForGeneration}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select an election" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {elections?.map((election) => (
-                        <SelectItem key={election.id} value={election.id.toString()}>
-                          {election.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsGenerationDialogOpen(false)}>Cancel</Button>
-                  <Button 
-                    onClick={handleGenerateResults}
-                    disabled={isGeneratingResults || !selectedElectionForGeneration}
-                  >
-                    {isGeneratingResults ? 'Generating...' : 'Generate Results'}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            
-            <Button 
-              variant="outline"
-              onClick={handleExportResults}
-            >
-              <DownloadIcon className="h-4 w-4 mr-2" /> Export Results
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" /> Export Data
             </Button>
           </div>
         </div>
-
-        <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search by constituency..."
-              className="pl-10 pr-4 py-2 border rounded-md w-full"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        
+        {/* Tabs */}
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="results">Results</TabsTrigger>
+            <TabsTrigger value="generate">Generate Results</TabsTrigger>
+          </TabsList>
           
-          <div className="w-full sm:w-64">
-            <Select value={selectedElection} onValueChange={setSelectedElection}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Elections" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Elections</SelectItem>
-                {elections?.map((election) => (
-                  <SelectItem key={election.id} value={election.id.toString()}>
-                    {election.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {filteredResults.length > 0 ? (
-            filteredResults.map((result) => (
-              <Card key={result.id} className="overflow-hidden">
-                <CardHeader className="bg-gray-50 pb-2">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="text-lg">{result.constituency_name}</CardTitle>
-                      <p className="text-sm text-gray-500">{result.election_name}</p>
-                    </div>
-                    <div className="flex items-center space-x-4">
+          {/* Results Tab */}
+          <TabsContent value="results" className="space-y-4">
+            {/* Filters */}
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Search results..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              
+              {/* Election filter */}
+              <div className="w-full sm:w-48">
+                <Select value={selectedElection} onValueChange={setSelectedElection}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select election" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Elections</SelectItem>
+                    {electionOptions.map(election => (
+                      <SelectItem key={election.id} value={String(election.id)}>
+                        {election.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Published status filter */}
+              <div className="w-full sm:w-48">
+                <Select value={publishStatus} onValueChange={setPublishStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Published status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="unpublished">Unpublished</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            {/* Results list */}
+            <div className="space-y-4">
+              {filteredResults.length > 0 ? (
+                filteredResults.map(result => (
+                  <Card key={result.id} className="mb-4">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <div>
+                        <CardTitle className="text-xl">
+                          {result.election_name} - {result.constituency_name || "All Constituencies"}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Total Votes: {result.total_votes || 0} | 
+                          Turnout: {result.voter_turnout || 0}%
+                        </p>
+                      </div>
                       <div className="flex items-center space-x-2">
-                        <Label htmlFor={`publish-${result.id}`}>
-                          {result.published ? "Published" : "Unpublished"}
-                        </Label>
-                        <Switch 
-                          id={`publish-${result.id}`} 
-                          checked={result.published}
-                          onCheckedChange={(checked) => 
-                            togglePublishMutation.mutate({ resultId: result.id, publish: checked })
-                          }
-                          disabled={togglePublishMutation.isPending}
-                        />
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" /> View Details
+                        </Button>
+                        <Button 
+                          variant={result.published ? "destructive" : "default"}
+                          size="sm"
+                          onClick={() => togglePublish(result.id, result.published)}
+                        >
+                          {result.published ? (
+                            <><XCircle className="h-4 w-4 mr-1" /> Unpublish</>
+                          ) : (
+                            <><CheckCircle className="h-4 w-4 mr-1" /> Publish</>
+                          )}
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleExpand(result.id)}
-                      >
-                        {expandedResult === result.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <div className="mb-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Winner: <span className="font-medium">{result.winner_name}</span></span>
-                      <span>Total Votes: <span className="font-medium">{result.total_votes?.toLocaleString() || '0'}</span></span>
-                    </div>
-                  </div>
-                  
-                  {expandedResult === result.id && (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Candidate</TableHead>
-                          <TableHead>Party</TableHead>
-                          <TableHead>Votes</TableHead>
-                          <TableHead className="text-right">Percentage</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {result.candidates?.map((candidate) => (
-                          <TableRow key={candidate.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <div className="h-10 w-10 rounded-full overflow-hidden">
-                                  <img 
-                                    src={candidate.photoUrl || "/placeholder.svg"} 
-                                    alt={candidate.name}
-                                    className="h-full w-full object-cover" 
-                                  />
-                                </div>
-                                <div>{candidate.name}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{candidate.party}</TableCell>
-                            <TableCell>{candidate.votes?.toLocaleString() || '0'}</TableCell>
-                            <TableCell className="text-right">{candidate.votePercentage?.toFixed(1) || '0.0'}%</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-                  
-                  {!expandedResult || expandedResult !== result.id ? (
-                    <div className="relative pt-2">
-                      <div className="flex space-x-1">
-                        {result.candidates?.map((candidate) => (
-                          <div 
-                            key={candidate.id}
-                            className="h-2 rounded-full" 
-                            style={{ 
-                              width: `${candidate.votePercentage || 0}%`,
-                              backgroundColor: getPartyColor(candidate.party)
-                            }}
-                          />
-                        ))}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mt-2">
+                        <ResultCard result={result} />
                       </div>
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            ))
-          ) : (
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <EmptyResults />
+              )}
+            </div>
+          </TabsContent>
+          
+          {/* Generate Results Tab */}
+          <TabsContent value="generate" className="space-y-4">
             <Card>
-              <CardContent className="py-8">
-                <div className="text-center text-gray-500">
-                  <p className="mb-2">No results found</p>
-                  <p>Generate results for completed elections using the "Generate Results" button</p>
+              <CardHeader>
+                <CardTitle>Generate Election Results</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium">Select an election to generate results for:</h3>
+                  <p className="text-sm text-gray-500">
+                    Only completed elections are eligible for result generation.
+                  </p>
+                  
+                  <div className="mt-4 grid gap-4">
+                    {electionsLoading ? (
+                      <div className="text-center py-4">Loading elections...</div>
+                    ) : (
+                      Array.isArray(elections) && elections
+                        .filter(election => election.status === 'Completed')
+                        .map(election => (
+                          <Card key={election.id} className="overflow-hidden">
+                            <div className="flex justify-between items-center p-4">
+                              <div>
+                                <h4 className="font-medium">{election.name}</h4>
+                                <p className="text-sm text-gray-500">{election.type} | {election.date}</p>
+                              </div>
+                              <Button
+                                onClick={() => generateResults(election.id)}
+                                disabled={generateMutation.isPending}
+                              >
+                                Generate Results
+                              </Button>
+                            </div>
+                          </Card>
+                        ))
+                    )}
+                    
+                    {Array.isArray(elections) && elections.filter(election => election.status === 'Completed').length === 0 && (
+                      <div className="text-center py-4">
+                        <p className="text-gray-500">No completed elections available for result generation.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
 };
-
-// Helper function to get a color based on party name
-function getPartyColor(partyName) {
-  if (!partyName) return '#cccccc';
-  
-  // Create a simple hash of the party name to generate a consistent color
-  let hash = 0;
-  for (let i = 0; i < partyName.length; i++) {
-    hash = partyName.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  
-  // Convert to a hue value (0-360)
-  const hue = hash % 360;
-  
-  // Use HSL to generate colors with consistent saturation and lightness
-  return `hsl(${hue}, 70%, 50%)`;
-}
 
 export default SuperadminResults;

@@ -17,13 +17,13 @@ const VoterResults = () => {
   const [selectedElection, setSelectedElection] = useState('all');
   
   // Fetch elections for the dropdown
-  const { data: elections, isLoading: electionsLoading } = useQuery({
+  const { data: elections = [], isLoading: electionsLoading } = useQuery({
     queryKey: ['elections'],
     queryFn: async () => {
       try {
         // Only fetch completed elections
         const response = await ElectionService.getAllElections({ status: 'Completed' });
-        return response || [];
+        return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error('Error fetching elections:', error);
         return [];
@@ -32,7 +32,7 @@ const VoterResults = () => {
   });
   
   // Fetch published results - ensure only published results are shown (superadmin confirmation)
-  const { data: results, isLoading: resultsLoading } = useQuery({
+  const { data: results = [], isLoading: resultsLoading } = useQuery({
     queryKey: ['voter-results', selectedElection],
     queryFn: async () => {
       try {
@@ -45,7 +45,7 @@ const VoterResults = () => {
         }
         
         const data = await ResultService.getAllResults(filters);
-        return data || [];
+        return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error('Error fetching results:', error);
         toast({
@@ -59,10 +59,14 @@ const VoterResults = () => {
   });
   
   // Format election options for the dropdown
-  const electionOptions = elections?.map((election) => ({
+  const electionOptions = Array.isArray(elections) ? elections.map((election) => ({
     id: election.id,
     name: election.name
-  })) || [];
+  })) : [];
+  
+  console.log("Elections:", elections);
+  console.log("Election Options:", electionOptions);
+  console.log("Results:", results);
   
   // Display loading state
   if (resultsLoading) {

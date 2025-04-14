@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ const SuperadminElections = () => {
     queryFn: async () => {
       try {
         const response = await ElectionService.getAllElections();
-        return response || [];
+        return Array.isArray(response) ? response : [];
       } catch (error) {
         console.error('Error fetching elections:', error);
         toast({
@@ -40,15 +39,17 @@ const SuperadminElections = () => {
   // Delete election mutation
   const deleteElectionMutation = useMutation({
     mutationFn: async (id) => {
+      console.log("Deleting election with ID:", id);
       return await ElectionService.deleteElection(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['elections'] });
+      queryClient.invalidateQueries(['elections']);
       toast({
         title: "Success",
         description: "Election deleted successfully",
       });
       setIsDialogOpen(false);
+      setConfirmDeleteId(null);
     },
     onError: (error) => {
       console.error('Error deleting election:', error);
@@ -83,10 +84,13 @@ const SuperadminElections = () => {
     });
   };
 
+  // For debugging
+  console.log("Elections:", elections);
+  console.log("Delete mutation state:", deleteElectionMutation);
+
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Header with actions */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <h1 className="text-2xl font-bold">Election Management</h1>
           <Button asChild>
@@ -96,7 +100,6 @@ const SuperadminElections = () => {
           </Button>
         </div>
 
-        {/* Search and filters */}
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -120,80 +123,84 @@ const SuperadminElections = () => {
           </select>
         </div>
 
-        {/* Elections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {elections.map((election) => (
-            <Card key={election.id}>
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <CardTitle>{election.name}</CardTitle>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                    ${election.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                    election.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' : 
-                    election.status === 'Preparation' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'}`}>
-                    {election.status}
-                  </span>
-                </div>
-                <CardDescription>{election.type} Election</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-gray-500" />
-                    <span className="text-sm">{election.date}</span>
+          {Array.isArray(elections) && elections.length > 0 ? (
+            elections.map((election) => (
+              <Card key={election.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <CardTitle>{election.name}</CardTitle>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                      ${election.status === 'Active' ? 'bg-green-100 text-green-800' : 
+                      election.status === 'Scheduled' ? 'bg-blue-100 text-blue-800' : 
+                      election.status === 'Preparation' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'}`}>
+                      {election.status}
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-gray-500">Candidates</p>
-                      <p className="font-medium">{election.candidates}</p>
+                  <CardDescription>{election.type} Election</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                      <span className="text-sm">{election.date}</span>
                     </div>
-                    <div>
-                      <p className="text-gray-500">Eligible Voters</p>
-                      <p className="font-medium">{election.voters?.toLocaleString() || "0"}</p>
-                    </div>
-                    {election.turnout && (
+                    <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
-                        <p className="text-gray-500">Turnout</p>
-                        <p className="font-medium">{election.turnout}</p>
+                        <p className="text-gray-500">Candidates</p>
+                        <p className="font-medium">{election.candidates}</p>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-gray-500">Eligible Voters</p>
+                        <p className="font-medium">{election.voters?.toLocaleString() || "0"}</p>
+                      </div>
+                      {election.turnout && (
+                        <div>
+                          <p className="text-gray-500">Turnout</p>
+                          <p className="font-medium">{election.turnout}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => handleEditElection(election.id)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" /> Edit
-                  </Button>
-                  {election.status === 'Completed' && (
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <div className="flex space-x-2">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleViewResults(election.id)}
+                      onClick={() => handleEditElection(election.id)}
                     >
-                      <Eye className="h-4 w-4 mr-1" /> Results
+                      <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>
-                  )}
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => handleDeleteElection(election.id)}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                    {election.status === 'Completed' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleViewResults(election.id)}
+                      >
+                        <Eye className="h-4 w-4 mr-1" /> Results
+                      </Button>
+                    )}
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleDeleteElection(election.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-8">
+              <p className="text-gray-500">No elections found</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Confirmation Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -204,7 +211,11 @@ const SuperadminElections = () => {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={confirmDelete} disabled={deleteElectionMutation.isPending}>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete} 
+              disabled={deleteElectionMutation.isPending}
+            >
               {deleteElectionMutation.isPending ? "Deleting..." : "Delete Election"}
             </Button>
           </DialogFooter>

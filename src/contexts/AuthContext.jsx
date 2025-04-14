@@ -148,6 +148,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       // Simulate password reset email
+      console.log(`Password reset requested for ${email} with role ${role}`);
+      
       toast({
         title: "Password reset initiated",
         description: `A password reset link has been sent to ${email}`,

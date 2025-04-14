@@ -59,7 +59,12 @@ const Login = () => {
         description: "If your email is registered, you will receive reset instructions",
       });
     } catch (error) {
-      // Error toast will be shown by AuthContext
+      console.error("Password reset error:", error);
+      toast({
+        title: "Reset failed",
+        description: error?.message || "Failed to reset password",
+        variant: "destructive"
+      });
     }
   };
   
@@ -165,8 +170,10 @@ const Login = () => {
               </Button>
               
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogTrigger className="text-sm text-primary hover:underline">
-                  Forgot your password?
+                <DialogTrigger asChild>
+                  <Button variant="link" className="text-sm text-primary hover:underline">
+                    Forgot your password?
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
@@ -175,43 +182,41 @@ const Login = () => {
                       Enter your email address and we'll send you a link to reset your password.
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleResetPassword}>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="resetRole">Account Type</Label>
-                        <RadioGroup 
-                          id="resetRole" 
-                          defaultValue="voter" 
-                          className="flex space-x-2" 
-                          value={resetRole}
-                          onValueChange={setResetRole}
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="voter" id="reset-voter" />
-                            <Label htmlFor="reset-voter">Voter</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="admin" id="reset-admin" />
-                            <Label htmlFor="reset-admin">Admin</Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="superadmin" id="reset-superadmin" />
-                            <Label htmlFor="reset-superadmin">Super Admin</Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-email">Email</Label>
-                        <Input 
-                          id="reset-email" 
-                          placeholder="name@example.com" 
-                          value={resetEmail}
-                          onChange={(e) => setResetEmail(e.target.value)}
-                          required
-                        />
-                      </div>
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="resetRole">Account Type</Label>
+                      <RadioGroup 
+                        id="resetRole" 
+                        defaultValue="voter" 
+                        className="flex space-x-2" 
+                        value={resetRole}
+                        onValueChange={setResetRole}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="voter" id="reset-voter" />
+                          <Label htmlFor="reset-voter">Voter</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="admin" id="reset-admin" />
+                          <Label htmlFor="reset-admin">Admin</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="superadmin" id="reset-superadmin" />
+                          <Label htmlFor="reset-superadmin">Super Admin</Label>
+                        </div>
+                      </RadioGroup>
                     </div>
-                    <DialogFooter className="pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input 
+                        id="reset-email" 
+                        placeholder="name@example.com" 
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <DialogFooter>
                       <Button type="submit">Reset Password</Button>
                     </DialogFooter>
                   </form>
