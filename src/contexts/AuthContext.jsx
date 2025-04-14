@@ -65,6 +65,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password, role, electionType) => {
     setLoading(true);
     try {
+      console.log("Login attempt:", { email, role, electionType });
+      
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -99,6 +101,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userDataWithoutPassword));
       setUser(userDataWithoutPassword);
       
+      console.log("User authenticated:", userDataWithoutPassword);
+      
       // Navigate based on role
       switch (role) {
         case 'superadmin':
@@ -118,6 +122,7 @@ export const AuthProvider = ({ children }) => {
         title: "Login successful",
         description: `Welcome back, ${userDataWithoutPassword.name}`,
       });
+      return userDataWithoutPassword;
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -144,7 +149,9 @@ export const AuthProvider = ({ children }) => {
       );
       
       if (!foundUser) {
-        throw new Error('User not found');
+        // For security, don't tell the user that the email doesn't exist
+        console.log(`User not found: ${email} with role ${role}, but returning success for security`);
+        return true;
       }
 
       // Simulate password reset email

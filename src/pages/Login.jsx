@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import { Link } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -21,6 +22,7 @@ const Login = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetRole, setResetRole] = useState('voter');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showCredentials, setShowCredentials] = useState(false);
   
   const { login, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -188,7 +190,7 @@ const Login = () => {
                       <RadioGroup 
                         id="resetRole" 
                         defaultValue="voter" 
-                        className="flex space-x-2" 
+                        className="flex flex-wrap gap-4" 
                         value={resetRole}
                         onValueChange={setResetRole}
                       >
@@ -222,15 +224,46 @@ const Login = () => {
                   </form>
                 </DialogContent>
               </Dialog>
+              
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="w-full">
+                    Need demo credentials?
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Demo Credentials</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Use these credentials to test the application:
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="space-y-4 my-4">
+                    <div className="border p-3 rounded-md bg-gray-50">
+                      <p className="font-semibold">Superadmin</p>
+                      <p><strong>Email:</strong> superadmin@example.com</p>
+                      <p><strong>Password:</strong> password123</p>
+                    </div>
+                    <div className="border p-3 rounded-md bg-gray-50">
+                      <p className="font-semibold">Admin</p>
+                      <p><strong>Email:</strong> admin@example.com</p>
+                      <p><strong>Password:</strong> password123</p>
+                    </div>
+                    <div className="border p-3 rounded-md bg-gray-50">
+                      <p className="font-semibold">Voter</p>
+                      <p><strong>Email:</strong> voter@example.com</p>
+                      <p><strong>Password:</strong> password123</p>
+                      <p><strong>Election Type:</strong> Lok Sabha</p>
+                    </div>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogAction>Close</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </CardFooter>
           </form>
         </Card>
-        
-        <p className="text-center text-sm text-gray-600">
-          Demo credentials: superadmin@example.com / admin@example.com / voter@example.com
-          <br />
-          Password: password123
-        </p>
       </div>
     </div>
   );
