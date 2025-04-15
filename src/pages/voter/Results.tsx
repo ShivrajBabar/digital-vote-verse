@@ -1,15 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
-import { ResultService, ElectionService } from '@/api/apiService';
 import { useQuery } from '@tanstack/react-query';
 import ResultsPageHeader from '@/components/voter/results/ResultsPageHeader';
 import ElectionSelector from '@/components/voter/results/ElectionSelector';
 import ResultCard from '@/components/voter/results/ResultCard';
 import EmptyResults from '@/components/voter/results/EmptyResults';
 import LoadingResults from '@/components/voter/results/LoadingResults';
+import { toast as sonnerToast } from 'sonner';
+import axios from 'axios';
 import { ResultData } from '@/types/election';
 
 const VoterResults = () => {
@@ -22,31 +23,43 @@ const VoterResults = () => {
     queryKey: ['elections'],
     queryFn: async () => {
       try {
-        // Only fetch completed elections
-        const response = await ElectionService.getAllElections({ status: 'Completed' });
-        return response || [];
+        // Fetch completed elections from the database
+        const response = await axios.get('/api/elections', {
+          params: { status: 'Completed' }
+        });
+        console.log('Fetched elections:', response.data);
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         console.error('Error fetching elections:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load elections",
+          variant: "destructive"
+        });
         return [];
       }
     }
   });
   
-  // Fetch published results - ensure only published results are shown (superadmin confirmation)
-  const { data: results, isLoading: resultsLoading } = useQuery({
+  // Fetch published results - ensure only published results are shown
+  const { 
+    data: results, 
+    isLoading: resultsLoading,
+    refetch: refetchResults
+  } = useQuery({
     queryKey: ['voter-results', selectedElection],
     queryFn: async () => {
       try {
-        const filters: any = { published: true }; // Only fetch published results
+        // Define query parameters
+        const params: Record<string, string> = { published: 'true' };
         if (selectedElection !== 'all') {
-          const electionId = parseInt(selectedElection);
-          if (!isNaN(electionId)) {
-            filters.election_id = electionId;
-          }
+          params.election_id = selectedElection;
         }
         
-        const data = await ResultService.getAllResults(filters);
-        return data || [];
+        // Fetch results from the database
+        const response = await axios.get('/api/results', { params });
+        console.log('Fetched results:', response.data);
+        return Array.isArray(response.data) ? response.data : [];
       } catch (error) {
         console.error('Error fetching results:', error);
         toast({
@@ -64,6 +77,12 @@ const VoterResults = () => {
     id: election.id,
     name: election.name
   })) || [];
+  
+  // Handler for refreshing results
+  const handleRefresh = useCallback(() => {
+    refetchResults();
+    sonnerToast.info("Refreshing results...");
+  }, [refetchResults]);
   
   // Display loading state
   if (resultsLoading) {
@@ -87,7 +106,8 @@ const VoterResults = () => {
         <ElectionSelector 
           selectedElection={selectedElection} 
           setSelectedElection={setSelectedElection} 
-          electionOptions={electionOptions} 
+          electionOptions={electionOptions}
+          isLoading={electionsLoading}
         />
 
         <div className="space-y-4">
@@ -96,7 +116,7 @@ const VoterResults = () => {
               <ResultCard key={result.id} result={result} />
             ))
           ) : (
-            <EmptyResults />
+            <EmptyResults onRefresh={handleRefresh} />
           )}
         </div>
       </div>

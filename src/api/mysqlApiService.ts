@@ -1,3 +1,4 @@
+
 import db from './mysqlDb';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Election, Candidate, ElectionResult, CandidateResult } from '../database/schema';
@@ -173,34 +174,72 @@ export const ElectionService = {
 // Results API
 export const ResultService = {
   async getAllResults(filters = {}) {
-    const sql = `
-      SELECT er.*, e.name as election_name, c.name as constituency_name,
-             winner.name as winner_name, winner.party as winner_party
-      FROM election_results er
-      JOIN elections e ON er.election_id = e.id
-      JOIN constituencies c ON er.constituency_id = c.id
-      JOIN candidates winner ON er.winner_id = winner.id
-    `;
-    
-    const results: any[] = await db.query(sql);
-    
-    // Fetch candidate results for each election result
-    for (const result of results) {
-      const candidateSql = `
-        SELECT cr.*, c.name, c.party, c.symbol_image as photoUrl, 
-               u.photo_url as photoUrl, c.user_id,
-               (cr.votes / er.total_votes) * 100 as votePercentage
-        FROM candidate_results cr
-        JOIN candidates c ON cr.candidate_id = c.id
-        JOIN users u ON c.user_id = u.id
-        JOIN election_results er ON cr.election_result_id = er.id
-        WHERE cr.election_result_id = ?
+    try {
+      console.log('Getting all results with filters:', filters);
+      
+      // Build WHERE clause based on filters
+      let whereClause = 'WHERE 1=1';
+      const params = [];
+      
+      if (filters.published !== undefined) {
+        whereClause += ' AND er.published = ?';
+        params.push(filters.published ? 1 : 0);
+      }
+      
+      if (filters.election_id !== undefined) {
+        whereClause += ' AND er.election_id = ?';
+        params.push(filters.election_id);
+      }
+      
+      if (filters.constituency_id !== undefined) {
+        whereClause += ' AND er.constituency_id = ?';
+        params.push(filters.constituency_id);
+      }
+      
+      // Main query to get election results
+      const sql = `
+        SELECT 
+          er.id, er.election_id, er.constituency_id, er.winner_id, er.total_votes, er.published,
+          e.name as election_name, e.type as election_type,
+          c.name as constituency_name,
+          u.name as winner_name, cand.party as winner_party,
+          er.created_at as completed_date, er.updated_at as published_date
+        FROM election_results er
+        JOIN elections e ON er.election_id = e.id
+        JOIN constituencies c ON er.constituency_id = c.id
+        JOIN candidates cand ON er.winner_id = cand.id
+        JOIN users u ON cand.user_id = u.id
+        ${whereClause}
+        ORDER BY er.created_at DESC
       `;
       
-      result.candidates = await db.query(candidateSql, [result.id]);
+      console.log('Executing query:', sql, 'with params:', params);
+      const results = await db.query(sql, params);
+      console.log(`Found ${results.length} results`);
+      
+      // Fetch candidate results for each election result
+      for (const result of results) {
+        const candidateSql = `
+          SELECT 
+            cr.id, cr.candidate_id, cr.votes, cr.vote_percentage,
+            c.party, c.symbol as symbol_url, c.symbol_image,
+            u.id as user_id, u.name, u.photo_url
+          FROM candidate_results cr
+          JOIN candidates c ON cr.candidate_id = c.id
+          JOIN users u ON c.user_id = u.id
+          WHERE cr.election_result_id = ?
+          ORDER BY cr.votes DESC
+        `;
+        
+        result.candidates = await db.query(candidateSql, [result.id]);
+        console.log(`Found ${result.candidates.length} candidates for result ${result.id}`);
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Database error in getAllResults:', error);
+      throw error;
     }
-    
-    return results;
   },
   
   async getResultById(id: number) {
