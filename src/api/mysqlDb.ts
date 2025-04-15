@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Create connection pool
-const pool = mysql.createPool(dbConfig);
+export const pool = mysql.createPool(dbConfig);
 
 // Test database connection
 export async function testConnection() {
@@ -110,5 +110,6 @@ export default {
   insert,
   update,
   testConnection,
-  setupDatabase
+  setupDatabase,
+  pool
 };

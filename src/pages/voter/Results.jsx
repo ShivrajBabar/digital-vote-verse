@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,14 +10,19 @@ import ElectionSelector from '@/components/voter/results/ElectionSelector';
 import ResultCard from '@/components/voter/results/ResultCard';
 import EmptyResults from '@/components/voter/results/EmptyResults';
 import LoadingResults from '@/components/voter/results/LoadingResults';
+import DownloadButtons from '@/components/common/DownloadButtons';
+import { motion } from 'framer-motion';
 
 const VoterResults = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [selectedElection, setSelectedElection] = useState('all');
   
-  // Fetch elections for the dropdown
-  const { data: elections = [], isLoading: electionsLoading } = useQuery({
+  // Elections query for dropdown
+  const { 
+    data: elections = [],
+    isLoading: electionsLoading 
+  } = useQuery({
     queryKey: ['elections'],
     queryFn: async () => {
       try {
@@ -37,8 +42,12 @@ const VoterResults = () => {
     }
   });
   
-  // Fetch published results - ensure only published results are shown (superadmin confirmation)
-  const { data: results = [], isLoading: resultsLoading } = useQuery({
+  // Results query
+  const { 
+    data: results = [], 
+    isLoading: resultsLoading,
+    refetch: refetchResults
+  } = useQuery({
     queryKey: ['voter-results', selectedElection],
     queryFn: async () => {
       try {
@@ -180,8 +189,35 @@ const VoterResults = () => {
     name: election.name
   })) : [];
   
-  console.log("Election Options:", electionOptions);
-  console.log("Results:", results);
+  // Prepare download data for export
+  const downloadData = results.map(result => ({
+    election_name: result.election_name,
+    constituency_name: result.constituency_name,
+    winner_name: result.winner_name,
+    winner_party: result.winner_party,
+    total_votes: result.total_votes,
+    voter_turnout: result.voter_turnout || '-',
+    completed_date: new Date(result.completed_date || Date.now()).toLocaleDateString()
+  }));
+  
+  const downloadColumns = [
+    { title: 'Election', key: 'election_name' },
+    { title: 'Constituency', key: 'constituency_name' },
+    { title: 'Winner', key: 'winner_name' },
+    { title: 'Party', key: 'winner_party' },
+    { title: 'Total Votes', key: 'total_votes' },
+    { title: 'Turnout %', key: 'voter_turnout' },
+    { title: 'Completed Date', key: 'completed_date' }
+  ];
+  
+  // Handler for refreshing results
+  const handleRefresh = useCallback(() => {
+    refetchResults();
+    toast({
+      title: "Refreshing",
+      description: "Updating election results...",
+    });
+  }, [refetchResults, toast]);
   
   // Display loading state
   if (resultsLoading) {
@@ -200,21 +236,43 @@ const VoterResults = () => {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
           <ResultsPageHeader electionCount={results?.length || 0} />
+          
+          {results && results.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DownloadButtons 
+                data={downloadData}
+                filename={`Election-Results-${new Date().toISOString().split('T')[0]}`}
+                columns={downloadColumns}
+              />
+            </motion.div>
+          )}
         </div>
 
         <ElectionSelector 
           selectedElection={selectedElection} 
           setSelectedElection={setSelectedElection} 
           electionOptions={electionOptions} 
+          isLoading={electionsLoading}
         />
 
         <div className="space-y-4">
           {results && results.length > 0 ? (
             results.map((result) => (
-              <ResultCard key={result.id} result={result} />
+              <motion.div
+                key={result.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <ResultCard result={result} />
+              </motion.div>
             ))
           ) : (
-            <EmptyResults />
+            <EmptyResults onRefresh={handleRefresh} />
           )}
         </div>
       </div>

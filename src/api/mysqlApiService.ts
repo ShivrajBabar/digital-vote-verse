@@ -1,4 +1,3 @@
-
 import db from './mysqlDb';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Election, Candidate, ElectionResult, CandidateResult } from '../database/schema';
@@ -183,7 +182,7 @@ export const ResultService = {
       JOIN candidates winner ON er.winner_id = winner.id
     `;
     
-    const results = await db.query(sql);
+    const results: any[] = await db.query(sql);
     
     // Fetch candidate results for each election result
     for (const result of results) {
@@ -215,7 +214,7 @@ export const ResultService = {
       WHERE er.id = ?
     `;
     
-    const result = await db.queryOne(sql, [id]);
+    const result: any = await db.queryOne(sql, [id]);
     
     if (result) {
       const candidateSql = `
@@ -238,8 +237,8 @@ export const ResultService = {
   async createResult(resultData: Partial<ElectionResult>, candidateResults: Partial<CandidateResult>[]) {
     const now = new Date().toISOString();
     
-    // Begin transaction
-    const connection = await db.pool.getConnection();
+    // Begin transaction - Get connection from the db module
+    const connection = await (db as any).pool.getConnection();
     await connection.beginTransaction();
     
     try {
@@ -275,7 +274,7 @@ export const ResultService = {
           resultId,
           candidateResult.candidate_id,
           candidateResult.votes,
-          candidateResult.votePercentage || 0,
+          candidateResult.vote_percentage || 0,
           now,
           now
         ];
@@ -326,7 +325,7 @@ export const ResultService = {
   
   async deleteResult(id: number) {
     // Begin transaction
-    const connection = await db.pool.getConnection();
+    const connection = await (db as any).pool.getConnection();
     await connection.beginTransaction();
     
     try {
