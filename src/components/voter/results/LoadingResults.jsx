@@ -1,22 +1,29 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader } from 'lucide-react';
+import { Skeleton } from "@/components/ui/skeleton";
 
 const LoadingResults = () => {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center p-10 text-center">
-        <div className="relative mb-3">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-200"></div>
-          <div className="absolute top-0 left-0 animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
-        </div>
-        <h3 className="text-xl font-medium mb-1">Loading Results</h3>
-        <p className="text-gray-500">
-          Please wait while we fetch the election results...
-        </p>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <div className="w-full sm:w-64">
+        <Skeleton className="h-10" />
+      </div>
+      
+      {[1, 2].map((i) => (
+        <Card key={i} className="overflow-hidden">
+          <CardContent className="pt-6">
+            <div className="flex flex-col space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32" />
+              <div className="py-4">
+                <Skeleton className="h-40 w-full" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 

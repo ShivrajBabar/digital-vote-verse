@@ -15,7 +15,7 @@ const EmptyResults = () => {
         <div className="mt-6 p-3 bg-amber-50 border border-amber-200 rounded-md flex items-start">
           <AlertCircle size={20} className="text-amber-500 mr-2 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-amber-800 text-left">
-            Results are typically published within 24-48 hours after an election concludes. Check back soon for updates.
+            If you're expecting to see results, please ensure you're using the correct election filter or check back later.
           </p>
         </div>
       </CardContent>
