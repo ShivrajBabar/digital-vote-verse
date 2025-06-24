@@ -3,6 +3,30 @@ import db from './mysqlDb';
 import { v4 as uuidv4 } from 'uuid';
 import { User, Election, Candidate, ElectionResult, CandidateResult } from '../database/schema';
 
+// Define interfaces for better type safety
+interface ResultFilters {
+  published?: boolean;
+  election_id?: number;
+  constituency_id?: number;
+}
+
+interface DatabaseResult {
+  id: number;
+  election_id: number;
+  constituency_id: number;
+  winner_id: number;
+  total_votes: number;
+  published: number;
+  election_name: string;
+  election_type: string;
+  constituency_name: string;
+  winner_name: string;
+  winner_party: string;
+  created_at: string;
+  updated_at: string;
+  candidates?: any[];
+}
+
 // Users API
 export const UserService = {
   async getAllUsers(filters = {}) {
@@ -173,7 +197,7 @@ export const ElectionService = {
 
 // Results API
 export const ResultService = {
-  async getAllResults(filters = {}) {
+  async getAllResults(filters: ResultFilters = {}) {
     try {
       console.log('Getting all results with filters:', filters);
       
@@ -214,7 +238,7 @@ export const ResultService = {
       `;
       
       console.log('Executing query:', sql, 'with params:', params);
-      const results = await db.query(sql, params);
+      const results = await db.query<DatabaseResult>(sql, params);
       console.log(`Found ${results.length} results`);
       
       // Fetch candidate results for each election result
@@ -232,7 +256,7 @@ export const ResultService = {
         `;
         
         result.candidates = await db.query(candidateSql, [result.id]);
-        console.log(`Found ${result.candidates.length} candidates for result ${result.id}`);
+        console.log(`Found ${result.candidates?.length || 0} candidates for result ${result.id}`);
       }
       
       return results;

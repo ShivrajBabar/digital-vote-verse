@@ -6,16 +6,18 @@ interface ElectionSelectorProps {
   selectedElection: string;
   setSelectedElection: (value: string) => void;
   electionOptions: { id: number; name: string }[];
+  isLoading?: boolean;
 }
 
 const ElectionSelector: React.FC<ElectionSelectorProps> = ({ 
   selectedElection, 
   setSelectedElection, 
-  electionOptions 
+  electionOptions,
+  isLoading = false
 }) => {
   return (
     <div className="w-full sm:w-64">
-      <Select value={selectedElection} onValueChange={setSelectedElection}>
+      <Select value={selectedElection} onValueChange={setSelectedElection} disabled={isLoading}>
         <SelectTrigger>
           <SelectValue placeholder="All Elections" />
         </SelectTrigger>
